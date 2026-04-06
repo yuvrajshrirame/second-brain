@@ -1,30 +1,24 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 
-function GraphEngine() {
-  // Stable mock data to test the layout
-  const data = useMemo(() => ({
-    nodes: [
-      { id: '1', name: 'Root Concept', val: 5 },
-      { id: '2', name: 'React', val: 3 },
-      { id: '3', name: 'Database', val: 3 }
-    ],
-    links: [
-      { source: '1', target: '2' },
-      { source: '1', target: '3' }
-    ]
-  }), []);
-
+function GraphEngine({ data, selectedNodeId, onNodeClick }) {
   return (
     <div style={{ width: '100%', height: '100%', cursor: 'grab' }}>
       <ForceGraph2D
         graphData={data}
         backgroundColor="#000000"
-        nodeColor={() => '#cfa861'}
+        /* Highlight the selected node in pure White, Root in gray, others in Gold */
+        nodeColor={(node) => 
+          node.id === selectedNodeId ? '#ffffff' : 
+          node.id === '1' ? '#555555' : '#cfa861'
+        }
+        nodeRelSize={6}
         linkColor={() => '#333333'}
         nodeLabel="name"
-        width={window.innerWidth - 250} // Total width minus the sidebar
-        height={window.innerHeight / 3} // Exact height of the bottom panel
+        width={window.innerWidth - 260} 
+        height={window.innerHeight / 3}
+        /* Fires when you click a bubble in the physics simulation */
+        onNodeClick={(node) => onNodeClick(node.id)}
       />
     </div>
   );

@@ -289,3 +289,229 @@ html, body {
   transform: translateZ(0); /* Forces GPU hardware acceleration */
   pointer-events: none;
 }
+
+/* =========================================
+   V1.6 VAULT COCKPIT STYLES
+   ========================================= */
+
+.vault-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background-color: #020203;
+  color: #fff;
+  overflow: hidden;
+}
+
+/* Columns */
+/* --- Updated Columns with Smooth Transitions --- */
+.vault-left-col {
+  width: 260px;
+  border-right: 1px solid #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  background: #050508;
+  transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); /* Smooth collapse */
+  overflow-x: hidden;
+  white-space: nowrap; /* Prevents text wrapping when shrinking */
+}
+
+/* New class to trigger the collapsed state */
+.vault-left-col.collapsed {
+  width: 68px;
+}
+
+.vault-center-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; 
+  background: #020203;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* New class to trigger the full-screen modal mode */
+.vault-center-col.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+}
+
+/* --- Sidebar Icon Alignment --- */
+.vault-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Space between icon and text */
+  padding: 0.6rem 1.2rem;
+  color: #888;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  border-left: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.vault-nav-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+}
+
+.nav-text {
+  transition: opacity 0.2s ease;
+  opacity: 1;
+}
+
+.collapsed .nav-text,
+.collapsed .cyber-header span {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Top Navigation Bar in Editor */
+.editor-top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  color: #888;
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+}
+
+.top-nav-btn {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.top-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.vault-right-col {
+  width: 340px;
+  border-left: 1px solid #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  background: #050508;
+}
+
+/* UI Components */
+.cyber-header {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.widget-panel {
+  padding: 1.5rem;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+/* Search & Input */
+.global-search {
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #1a1a1a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #555;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.rapid-input-wrapper {
+  padding: 2rem;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.rapid-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  font-family: var(--font-sans);
+  outline: none;
+}
+.rapid-input::placeholder { color: #333; }
+
+/* Metrics */
+.metric-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.metric-value {
+  font-size: 2rem;
+  font-weight: 300;
+  color: #fff;
+}
+.metric-label {
+  font-size: 0.7rem;
+  color: #666;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+/* =========================================
+   V1.5 NOTION-STYLE EDITOR UPGRADES
+   ========================================= */
+
+/* Smooth page load animation */
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.notion-page-transition {
+  animation: pageFadeIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* The massive, invisible title input */
+.notion-title-input {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: clamp(2rem, 3vw, 3rem);
+  font-weight: 700;
+  font-family: var(--font-sans);
+  outline: none;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0 54px; /* Aligns perfectly with BlockNote's text margin */
+}
+
+.notion-title-input::placeholder { 
+  color: #333; 
+}
+
+/* Elegant, minimal scrollbar for the editor */
+.editor-scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+.editor-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+.editor-scroll-area::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 10px;
+}
+.editor-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
