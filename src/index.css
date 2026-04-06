@@ -65,3 +65,55 @@ html, body {
 }
 
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* --- V1.3 UI ENHANCEMENTS --- */
+
+/* Landing Page Grid */
+.feature-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 5rem 2rem 10rem 2rem;
+  position: relative;
+  z-index: 10;
+}
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+.feature-card {
+  background-color: #0a0a0a;
+  border: 1px solid #222;
+  border-radius: 4px;
+  padding: 2.5rem;
+  min-height: 250px;
+  transition: border-color 0.2s ease;
+}
+.feature-card:hover {
+  border-color: var(--accent);
+}
+
+/* Vault Interface */
+.vault-sidebar-btn {
+  width: 100%; padding: 0.8rem; background: transparent; 
+  border: 1px solid var(--accent); color: var(--accent); 
+  cursor: pointer; font-family: monospace; font-weight: bold;
+  transition: all 0.2s; margin-bottom: 2rem;
+}
+.vault-sidebar-btn:hover {
+  background: var(--accent); color: #000;
+}
+.vault-nav-item {
+  padding: 0.6rem 1rem; color: #888; cursor: pointer; 
+  font-family: monospace; font-size: 0.9rem; border-left: 2px solid transparent;
+}
+.vault-nav-item:hover {
+  background: rgba(207, 168, 97, 0.05); color: #fff; border-left: 2px solid var(--accent);
+}
+.panel-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1rem 1.5rem; border-bottom: 1px solid #222; background: #050508;
+}
+.panel-title {
+  color: var(--accent); font-family: monospace; font-size: 0.8rem; letter-spacing: 1px;
+}
