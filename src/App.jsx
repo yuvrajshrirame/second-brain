@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import LandingPage from './components/LandingPage';
-// We will import BootSequence and Vault in Phase 2
+import BootSequence from './components/BootSequence';
+import Vault from './components/Vault';
 
 function App() {
-  const [appState, setAppState] = useState('marketing');
+  const [appState, setAppState] = useState('marketing'); // marketing -> booting -> vault
 
   return (
     <>
@@ -14,17 +15,9 @@ function App() {
 
       {appState === 'marketing' && <LandingPage onEnter={() => setAppState('booting')} />}
       
-      {appState === 'booting' && (
-        <div style={{position: 'relative', zIndex: 10, color: 'white', textAlign: 'center', marginTop: '20vh'}}>
-          <h1>[ BOOTING SYSTEM... ]</h1>
-        </div>
-      )}
+      {appState === 'booting' && <BootSequence onComplete={() => setAppState('vault')} />}
       
-      {appState === 'vault' && (
-        <div style={{position: 'relative', zIndex: 10, color: 'white', textAlign: 'center', marginTop: '20vh'}}>
-          <h1>[ VAULT LOADED ]</h1>
-        </div>
-      )}
+      {appState === 'vault' && <Vault />}
     </>
   );
 }

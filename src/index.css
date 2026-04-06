@@ -63,3 +63,5 @@ html, body {
   transform: scale(1.05);
   background-color: #e6bf75;
 }
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
