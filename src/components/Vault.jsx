@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, addDoc, updateDoc, doc } from 'firebase/firestore';
-import { db } from '../firebase'; // Your new Firebase connection!
+import { signInWithPopup, signOut } from 'firebase/auth';
+import { db, auth, provider } from '../firebase';
 import GraphEngine from './GraphEngine';
 import BlockEditor from './BlockEditor';
 
@@ -10,30 +11,32 @@ const Icon = ({ path }) => (
   </svg>
 );
 
-function Vault() {
-  // 1. CLOUD STATE
+function Vault({ user }) {
+  // --- CLOUD STATE ---
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [selectedNodeId, setSelectedNodeId] = useState(null);
-  
-  // Local state for the title input so typing doesn't lag while syncing to the cloud
   const [localTitle, setLocalTitle] = useState("");
 
-  // 2. THE REAL-TIME SYNC (Fires automatically when the app loads)
+  // --- LAYOUT STATE ---
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
+  const [syncStatus, setSyncStatus] = useState('saved');
+
+  // --- REAL-TIME SYNC ---
   useEffect(() => {
-    // Listen to the 'nodes' collection in your database
+    // SECURITY: Do not attempt to fetch data if the user is not logged in!
+    if (!user) return;
+
     const unsubscribeNodes = onSnapshot(collection(db, 'nodes'), (snapshot) => {
       const fetchedNodes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      
       setGraphData(prev => ({ ...prev, nodes: fetchedNodes }));
-
-      // If nothing is selected and we just loaded nodes, select the first one
       if (!selectedNodeId && fetchedNodes.length > 0) {
         setSelectedNodeId(fetchedNodes[0].id);
         setLocalTitle(fetchedNodes[0].name);
       }
     });
 
-    // Listen to the 'links' collection
     const unsubscribeLinks = onSnapshot(collection(db, 'links'), (snapshot) => {
       const fetchedLinks = snapshot.docs.map(doc => doc.data());
       setGraphData(prev => ({ ...prev, links: fetchedLinks }));
@@ -43,9 +46,8 @@ function Vault() {
       unsubscribeNodes();
       unsubscribeLinks();
     };
-  }, [selectedNodeId]);
+  }, [selectedNodeId, user]);
 
-  // Update local title state whenever we switch documents
   useEffect(() => {
     const active = graphData.nodes.find(n => n.id === selectedNodeId);
     if (active) setLocalTitle(active.name);
@@ -53,43 +55,56 @@ function Vault() {
 
   const activeNode = graphData.nodes.find(n => n.id === selectedNodeId) || { name: 'Loading...' };
 
-  // --- LAYOUT STATE ---
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isFullScreen, setIsFullScreen] = useState(false);
-
-  // --- CLOUD ACTIONS ---
-  
-  // 1. Create a file in Firebase
+  // --- ACTIONS ---
   const handleCreateNode = async () => {
-    // Add the new node to Firestore
-    const newNodeRef = await addDoc(collection(db, 'nodes'), { 
-      name: 'Untitled', 
-      val: 3,
-      createdAt: Date.now() 
-    });
-
-    // If we have an active node, draw a physics link from it to the new node
+    const newNodeRef = await addDoc(collection(db, 'nodes'), { name: 'Untitled', val: 3, createdAt: Date.now() });
     if (selectedNodeId) {
-      await addDoc(collection(db, 'links'), { 
-        source: selectedNodeId, 
-        target: newNodeRef.id 
-      });
+      await addDoc(collection(db, 'links'), { source: selectedNodeId, target: newNodeRef.id });
     }
-
     setSelectedNodeId(newNodeRef.id);
   };
 
-  // 2. Update the file name in Firebase (Fires when you click away from the title input)
-  const handleTitleBlur = async () => {
-    if (!selectedNodeId) return;
-    const nodeRef = doc(db, 'nodes', selectedNodeId);
-    await updateDoc(nodeRef, { name: localTitle });
+  const handleTitleChange = (e) => {
+    setLocalTitle(e.target.value);
+    setSyncStatus('unsaved'); // Title changed, mark as unsaved
   };
 
+  const handleTitleBlur = async () => {
+    if (!selectedNodeId) return;
+    setSyncStatus('syncing'); // Uploading title to Firebase...
+    const nodeRef = doc(db, 'nodes', selectedNodeId);
+    await updateDoc(nodeRef, { name: localTitle });
+    setSyncStatus('saved'); // Secured.
+  };
+
+  // ==========================================
+  // THE LOCK SCREEN (If not authenticated)
+  // ==========================================
+  if (!user) {
+    return (
+      <div style={{ height: '100vh', width: '100vw', background: '#020203', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: 'var(--font-mono)' }}>
+         <div style={{ width: '60px', height: '60px', border: '1px solid var(--accent)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem', boxShadow: '0 0 30px rgba(207, 168, 97, 0.1)' }}>
+            <Icon path="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /> {/* Shield Icon */}
+         </div>
+         <h2 style={{ letterSpacing: '6px', marginBottom: '1rem', fontWeight: 300, fontSize: '1.5rem' }}>SYSTEM LOCKED</h2>
+         <p style={{ color: '#555', marginBottom: '3rem', fontFamily: 'var(--font-sans)', letterSpacing: '1px' }}>End-to-End Encryption Active. Authentication required.</p>
+         <button
+           onClick={() => signInWithPopup(auth, provider)}
+           style={{ background: 'var(--accent)', color: '#000', border: 'none', padding: '1rem 3rem', fontSize: '0.8rem', letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'var(--font-sans)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s', borderRadius: '2px' }}
+         >
+           Decrypt via Google
+         </button>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // THE ACTUAL VAULT (If authenticated)
+  // ==========================================
   return (
     <div className="vault-layout">
       
-      {/* --- LEFT COLUMN --- */}
+      {/* LEFT COLUMN */}
       <div className={`vault-left-col ${isSidebarCollapsed ? 'collapsed' : ''}`}>
         <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: 0 }}>
@@ -108,27 +123,34 @@ function Vault() {
              <span className="nav-text">DIRECTORY</span>
           </div>
           <div className="vault-nav-item"><Icon path="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /><span className="nav-text">Inbox</span></div>
+          <div className="vault-nav-item"><Icon path="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><span className="nav-text">Projects</span></div>
         </div>
 
         <div style={{ borderTop: '1px solid #1a1a1a', paddingBottom: '1rem' }}>
-          <div className="vault-nav-item"><Icon path="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /><span className="nav-text">Settings</span></div>
+          <div className="vault-nav-item" onClick={() => signOut(auth)}>
+            <Icon path="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            <span className="nav-text">Sign Out</span>
+          </div>
         </div>
       </div>
 
-      {/* --- CENTER COLUMN --- */}
+      {/* CENTER COLUMN */}
       <div className={`vault-center-col ${isFullScreen ? 'fullscreen' : ''}`}>
         <div className="editor-top-nav">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: '#fff' }}>Vault</span>
-            <span style={{ color: '#444' }}>/</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Icon path="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /> 
-              {localTitle}
-            </span>
-          </div>
-          
+          {/* THE DYNAMIC SYNC INDICATOR */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ color: '#4ade80' }}>Synced to Cloud</span>
+            <div style={{ 
+              color: syncStatus === 'saved' ? '#4ade80' : syncStatus === 'syncing' ? 'var(--accent)' : '#888',
+              fontSize: '0.8rem',
+              display: 'flex', alignItems: 'center', gap: '6px',
+              fontFamily: 'var(--font-mono)',
+              transition: 'color 0.3s ease'
+            }}>
+              {syncStatus === 'saved' ? <><span style={{fontSize:'10px'}}>●</span> Synced</> :
+               syncStatus === 'syncing' ? <><span style={{fontSize:'10px'}}>◌</span> Syncing...</> :
+               <><span style={{fontSize:'10px'}}>○</span> Unsaved</>}
+            </div>
+
             <button className="top-nav-btn" onClick={() => setIsFullScreen(!isFullScreen)} title="Toggle Fullscreen">
               <Icon path={isFullScreen ? "M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" : "M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"} />
             </button>
@@ -143,19 +165,18 @@ function Vault() {
               className="notion-title-input" 
               value={localTitle} 
               onChange={(e) => setLocalTitle(e.target.value)}
-              onBlur={handleTitleBlur} // Saves to Firebase ONLY when you click away
+              onBlur={handleTitleBlur} 
               placeholder="Untitled"
               disabled={!selectedNodeId}
             />
             
-            {/* The Editor is still local for now. We connect it next. */}
-            <BlockEditor documentId={selectedNodeId} />
+            <BlockEditor documentId={selectedNodeId} onSyncStatusChange={setSyncStatus} />
 
           </div>
         </div>
       </div>
 
-      {/* --- RIGHT COLUMN --- */}
+      {/* RIGHT COLUMN */}
       <div className="vault-right-col" style={{ display: isFullScreen ? 'none' : 'flex' }}>
         
         <div className="widget-panel" style={{ padding: 0, height: '300px', position: 'relative', display: 'flex', flexDirection: 'column' }}>
