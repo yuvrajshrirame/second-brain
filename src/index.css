@@ -3,14 +3,15 @@ html, body {
   padding: 0;
   background-color: #020203;
   color: #fff;
-  font-family: 'Inter', 'Courier New', monospace;
-  overflow-x: hidden;
-  overflow-y: auto;
+  font-family: var(--font-sans);
 }
 
 :root {
   --accent: #cfa861;
   --text-muted: #888888;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Playfair Display', 'Georgia', serif; /* The new elegant font */
+  --font-mono: 'Courier New', Courier, monospace;
 }
 
 /* Background System */
@@ -116,4 +117,175 @@ html, body {
 }
 .panel-title {
   color: var(--accent); font-family: monospace; font-size: 0.8rem; letter-spacing: 1px;
+}
+
+/* =========================================
+   V1.4 MASTERPIECE: EDITORIAL & GLASS UI
+   ========================================= */
+
+/* --- ANIMATIONS --- */
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes glowPulse {
+  0% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.1); }
+  100% { opacity: 0.3; transform: scale(1); }
+}
+
+.animate-fade-up {
+  animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-delay-1 { animation-delay: 0.2s; opacity: 0; }
+.animate-delay-2 { animation-delay: 0.4s; opacity: 0; }
+
+/* --- GLASSMORPHISM --- */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(12px); /* Slightly reduced for performance */
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  border-radius: 12px;
+  transform: translateZ(0); /* Hardware acceleration */
+  will-change: transform;
+}
+
+/* --- LAYOUT & TYPOGRAPHY --- */
+.editorial-wrapper {
+  width: 100%;
+  background-color: #020203;
+  color: #fff;
+  position: relative;
+}
+
+/* Glassy Navigation */
+.editorial-nav {
+  position: fixed;
+  top: 0; width: 100%;
+  padding: 1.5rem 4rem;
+  display: flex; justify-content: space-between; align-items: center;
+  z-index: 100; box-sizing: border-box;
+  background: rgba(2, 2, 3, 0.65); /* Slightly darker for better contrast */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15); /* The thin, premium border */
+}
+
+.nav-logo {
+  font-family: var(--font-serif);
+  font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px;
+}
+
+.nav-btn {
+  background: transparent; color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 0.6rem 2rem; border-radius: 4px;
+  font-family: var(--font-sans); font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.3s ease;
+}
+.nav-btn:hover { background: #fff; color: #000; }
+
+/* The Hero */
+.editorial-hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 10vw; position: relative; z-index: 10;
+}
+
+/* The True Heading */
+.hero-title {
+  font-family: var(--font-serif);
+  font-size: clamp(3.5rem, 8vw, 6.5rem); /* Scaled down for a tighter, refined look */
+  font-weight: 300; 
+  line-height: 1.05;
+  letter-spacing: -0.03em; 
+  margin: 10vh 0 2rem 0; 
+  max-width: 1000px;
+}
+
+.hero-title em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
+  padding-right: 0.1em; /* Fixes italic clipping */
+}
+
+.hero-subtitle {
+  font-family: var(--font-sans);
+  font-size: 1.2rem; color: var(--text-muted);
+  max-width: 500px; line-height: 1.6; font-weight: 300;
+  letter-spacing: 0.5px;
+}
+
+/* Sections */
+.editorial-section {
+  padding: 10rem 10vw; display: grid;
+  grid-template-columns: 1fr 1fr; gap: 8rem; align-items: center;
+  position: relative;
+}
+
+.section-reverse { grid-template-columns: 1fr 1fr; direction: rtl; }
+.section-reverse > * { direction: ltr; }
+
+.section-number {
+  font-family: var(--font-mono); color: var(--accent);
+  font-size: 0.8rem; margin-bottom: 2rem; display: block;
+  letter-spacing: 3px; text-transform: uppercase;
+}
+
+.section-title {
+  font-family: var(--font-serif); font-size: 3.5rem;
+  font-weight: 300; line-height: 1.2; margin: 0 0 1.5rem 0;
+  letter-spacing: -0.02em;
+}
+
+.section-title em {
+  font-style: italic; color: #888; font-weight: 300;
+}
+
+.section-text {
+  color: var(--text-muted); font-size: 1.1rem;
+  line-height: 1.8; font-weight: 300;
+}
+
+/* The Abstract Glass Visuals */
+.glass-visual-container {
+  position: relative; width: 100%; aspect-ratio: 1;
+  display: flex; justify-content: center; align-items: center;
+}
+
+.glass-floating-card {
+  width: 60%; height: 70%;
+  position: absolute;
+  animation: float 6s ease-in-out infinite;
+}
+
+.glass-floating-card:nth-child(2) {
+  width: 50%; height: 60%;
+  left: 10%; top: 30%;
+  animation-delay: -3s;
+  background: rgba(207, 168, 97, 0.05);
+}
+
+.glow-back {
+  position: absolute; 
+  width: 120%; /* Expanded to cover the area without needing a blur filter */
+  height: 120%;
+  /* Using a gradient instead of a blur filter saves the GPU */
+  background: radial-gradient(circle at center, rgba(207, 168, 97, 0.15) 0%, transparent 60%);
+  animation: glowPulse 8s infinite;
+  transform: translateZ(0); /* Forces GPU hardware acceleration */
+  pointer-events: none;
 }
