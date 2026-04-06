@@ -163,9 +163,8 @@ html, body {
 /* --- LAYOUT & TYPOGRAPHY --- */
 .editorial-wrapper {
   width: 100%;
-  background-color: #020203;
-  color: #fff;
-  position: relative;
+  overflow-x: hidden; /* Absolutely prevents side-scrolling */
+  box-sizing: border-box;
 }
 
 /* Glassy Navigation */
@@ -514,4 +513,195 @@ html, body {
 }
 .editor-scroll-area::-webkit-scrollbar-thumb:hover {
   background: #444;
+}
+
+/* =========================================
+   V1.6.0.1 GRAND COCKPIT LAYOUT
+   ========================================= */
+
+/* New color variables */
+:root {
+  /* Using your inspiration gold/amber for key phrase highlights */
+  --highlight-gold: #cfa861; 
+}
+
+/* Subtle background grid overlay on panels, but not top nav */
+.cyber-grid-bg {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background-image: 
+    linear-gradient(rgba(207, 168, 97, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(207, 168, 97, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* --- New Panel Sections (Image 5/6 inspiration) --- */
+.panel-grid-section {
+  position: relative;
+  padding: 5rem 5vw; /* Reduced from 10rem 10vw */
+  background-color: #020203;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  z-index: 10;
+  box-sizing: border-box; /* Keeps padding inside the 100% width */
+}
+
+.panel-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem; /* Slightly tighter gap between panels */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-panel {
+  position: relative;
+  padding: 3rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.dashboard-panel:hover {
+  border: 1px solid rgba(207, 168, 97, 0.15);
+  box-shadow: 0 0 30px rgba(207, 168, 97, 0.03);
+}
+
+.dashboard-panel-number {
+  font-family: var(--font-mono);
+  font-size: 5rem;
+  color: var(--highlight-gold);
+  opacity: 0.1;
+  position: absolute;
+  top: 1rem;
+  right: 2rem;
+  font-weight: 300;
+  pointer-events: none;
+}
+
+.dashboard-panel-title {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  font-weight: 300;
+  color: #fff;
+  margin: 0;
+}
+
+.dashboard-panel-title em {
+  font-family: var(--font-mono);
+  font-style: italic;
+  font-size: 0.9em;
+  color: var(--highlight-gold);
+}
+
+.dashboard-panel-text {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.8;
+  color: #888;
+  max-width: 90%;
+}
+
+/* Gold Marquee Footer Ticker (Image 4 inspiration) */
+@keyframes scrollTicker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-marquee {
+  width: 100%;
+  height: 50px;
+  background: #000;
+  border-top: 1px solid #1a1a1a;
+  border-bottom: 1px solid #1a1a1a;
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 20;
+}
+
+.ticker-content {
+  display: flex;
+  animation: scrollTicker 60s linear infinite;
+}
+
+.ticker-content:hover {
+  animation-play-state: paused;
+}
+
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #888;
+  padding: 0 4rem;
+}
+
+.ticker-item::after {
+  content: " ✦ ";
+  color: var(--highlight-gold);
+  margin-left: 1rem;
+}
+
+/* Workflow Step Section (Image 7/8 inspiration) */
+.workflow-section {
+  position: relative;
+  padding: 5rem 5vw; /* Reduced from 10rem 10vw */
+  background-color: #020203;
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem; /* Reduced from 6rem */
+  z-index: 10;
+  box-sizing: border-box; /* Keeps padding inside the 100% width */
+}
+
+.workflow-step {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+
+.workflow-num {
+  font-family: var(--font-serif);
+  font-size: 4rem;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--highlight-gold);
+  opacity: 0.8;
+  line-height: 1;
+}
+
+.workflow-step-title {
+  font-family: var(--font-serif);
+  font-size: 3rem;
+  font-weight: 300;
+  color: #fff;
+  margin: 0;
+}
+
+.workflow-step-title em {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-style: italic;
+  color: #fff;
+}
+
+.workflow-step-text {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.8;
+  color: #888;
+  max-width: 60%;
+  margin-top: 1rem;
 }
