@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useCreateBlockNote } from "@blocknote/react";
+import { filterSuggestionItems } from "@blocknote/core"; // NEW IMPORT
+import { useCreateBlockNote, SuggestionMenuController, getDefaultReactSlashMenuItems } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine"; 
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -7,36 +8,47 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css"; 
 
 // --- 1. THE ACTUAL EDITOR ---
-function EditorCore({ documentId, initialContent, onSyncStatusChange }) {
+function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, onAddLink }) {
   const editor = useCreateBlockNote({ initialContent });
-  
-  // A ref to hold our timer so we can reset it while you type
   const debounceTimer = useRef(null);
 
   const handleEditorChange = () => {
     if (!documentId || !editor) return;
-
-    // 1. Instantly tell the UI we have unsaved changes
     onSyncStatusChange('unsaved');
-
-    // 2. Clear the previous timer if you keep typing
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
-    // 3. Wait exactly 1 second after you STOP typing to save
     debounceTimer.current = setTimeout(async () => {
-      onSyncStatusChange('syncing'); // Tell UI we are uploading
-
+      onSyncStatusChange('syncing');
       try {
         const currentContent = JSON.stringify(editor.document);
         const docRef = doc(db, 'nodes', documentId);
         await updateDoc(docRef, { content: currentContent });
-        
-        onSyncStatusChange('saved'); // Tell UI we secured the bag
+        onSyncStatusChange('saved');
       } catch (error) {
         console.error("Sync failed", error);
         onSyncStatusChange('error');
       }
     }, 1000); 
+  };
+
+  // --- THE NEURAL LINKING ENGINE ---
+  const getMentionItems = async (query) => {
+    // Filter nodes based on what you type after the '@'
+    const filteredNodes = nodes.filter(node => 
+      node.name.toLowerCase().includes(query.toLowerCase()) && 
+      node.id !== documentId // Prevent linking to itself!
+    );
+
+    return filteredNodes.map((node) => ({
+      title: node.name,
+      onItemClick: () => {
+        // 1. Insert the aesthetic bracket link into the text
+        editor.insertText(`[[${node.name}]] `);
+        
+        // 2. Tell the Vault to update the physics graph in the cloud
+        onAddLink(documentId, node.id);
+      },
+    }));
   };
 
   return (
@@ -45,13 +57,27 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange }) {
         editor={editor} 
         theme="dark" 
         onChange={handleEditorChange} 
-      />
+      >
+        {/* CORRECTED: We wrap it in a function and filter it so it doesn't crash */}
+        <SuggestionMenuController
+          triggerCharacter={"/"}
+          getItems={async (query) =>
+            filterSuggestionItems(getDefaultReactSlashMenuItems(editor), query)
+          }
+        />
+        
+        {/* Your custom @ linking menu */}
+        <SuggestionMenuController
+          triggerCharacter={"@"}
+          getItems={getMentionItems}
+        />
+      </BlockNoteView>
     </div>
   );
 }
 
 // --- 2. THE DATA LOADER ---
-function BlockEditor({ documentId, onSyncStatusChange }) {
+function BlockEditor({ documentId, onSyncStatusChange, nodes, onAddLink }) {
   const [initialContent, setInitialContent] = useState("loading");
 
   useEffect(() => {
@@ -82,6 +108,8 @@ function BlockEditor({ documentId, onSyncStatusChange }) {
       documentId={documentId} 
       initialContent={initialContent} 
       onSyncStatusChange={onSyncStatusChange} 
+      nodes={nodes}
+      onAddLink={onAddLink}
     />
   );
 }

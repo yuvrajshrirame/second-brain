@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import confetti from 'canvas-confetti';
 import { collection, onSnapshot, addDoc, updateDoc, doc } from 'firebase/firestore';
 import { signInWithPopup, signOut } from 'firebase/auth';
 import { db, auth, provider } from '../firebase';
@@ -55,6 +56,48 @@ function Vault({ user }) {
 
   const activeNode = graphData.nodes.find(n => n.id === selectedNodeId) || { name: 'Loading...' };
 
+  // --- GAMIFICATION: COGNITIVE LEVEL LOGIC ---
+  // 1 Node = 10 XP | 1 Link = 25 XP (Encourages synthesizing!)
+  const totalXP = (graphData.nodes.length * 10) + (graphData.links.length * 25);
+  const currentLevel = Math.floor(totalXP / 100) + 1;
+  const currentLevelProgress = totalXP % 100; // Returns a number between 0 and 99 for the bar width
+
+  // --- LAB 9: TASK COMPLETION (SYNAPSE BURST) ---
+  const prevLevelRef = useRef(currentLevel);
+
+  useEffect(() => {
+    // If our current level is higher than our previous level, we Leveled Up!
+    if (currentLevel > prevLevelRef.current) {
+      fireSynapseBurst();
+      prevLevelRef.current = currentLevel; // Update the ref so it doesn't fire twice
+    }
+  }, [currentLevel]);
+
+  const fireSynapseBurst = () => {
+    // Custom "brain.exe" color palette: Gold, Pure White, Dark Obsidian
+    const colors = ['#cfa861', '#ffffff', '#1a1a1a']; 
+    
+    // Fires a burst from the left edge
+    confetti({
+      particleCount: 60,
+      angle: 60,
+      spread: 70,
+      origin: { x: 0, y: 0.8 },
+      colors: colors,
+      zIndex: 9999 // Ensures it sits on top of everything
+    });
+
+    // Fires a burst from the right edge
+    confetti({
+      particleCount: 60,
+      angle: 120,
+      spread: 70,
+      origin: { x: 1, y: 0.8 },
+      colors: colors,
+      zIndex: 9999
+    });
+  };
+
   // --- ACTIONS ---
   const handleCreateNode = async () => {
     const newNodeRef = await addDoc(collection(db, 'nodes'), { name: 'Untitled', val: 3, createdAt: Date.now() });
@@ -71,10 +114,28 @@ function Vault({ user }) {
 
   const handleTitleBlur = async () => {
     if (!selectedNodeId) return;
-    setSyncStatus('syncing'); // Uploading title to Firebase...
+    setSyncStatus('syncing');
     const nodeRef = doc(db, 'nodes', selectedNodeId);
     await updateDoc(nodeRef, { name: localTitle });
-    setSyncStatus('saved'); // Secured.
+    setSyncStatus('saved');
+  };
+
+  // --- NEW: BI-DIRECTIONAL LINKING DISPATCHER ---
+  const handleAddLink = async (sourceId, targetId) => {
+    // Check if link already exists in local state to prevent duplicates
+    const linkExists = graphData.links.some(link => {
+      // The graph engine turns string IDs into objects, so we safely extract the ID
+      const sId = typeof link.source === 'object' ? link.source.id : link.source;
+      const tId = typeof link.target === 'object' ? link.target.id : link.target;
+      
+      // Check both directions (A->B and B->A)
+      return (sId === sourceId && tId === targetId) || (sId === targetId && tId === sourceId);
+    });
+
+    if (!linkExists) {
+      // Blast it to the cloud. The real-time listener will auto-update the map!
+      await addDoc(collection(db, 'links'), { source: sourceId, target: targetId });
+    }
   };
 
   // ==========================================
@@ -112,6 +173,20 @@ function Vault({ user }) {
           </button>
           <h2 className="nav-text" style={{ fontSize: '1rem', fontWeight: '500', margin: 0, overflow: 'hidden' }}>Vault</h2>
         </div>
+
+        {/* --- GAMIFICATION UI INSERT --- */}
+        {!isSidebarCollapsed && (
+          <div className="xp-container animate-fade-up">
+            <div className="xp-header">
+              <span className="xp-title">COGNITIVE LEVEL</span>
+              <span className="xp-level">Lv.{currentLevel}</span>
+            </div>
+            <div className="xp-track">
+              <div className="xp-fill" style={{ width: `${currentLevelProgress}%` }}></div>
+            </div>
+          </div>
+        )}
+        {/* ----------------------------- */}
 
         <div style={{ flex: 1, paddingTop: '1rem' }}>
           <div className="vault-nav-item" onClick={handleCreateNode}>
@@ -170,7 +245,12 @@ function Vault({ user }) {
               disabled={!selectedNodeId}
             />
             
-            <BlockEditor documentId={selectedNodeId} onSyncStatusChange={setSyncStatus} />
+            <BlockEditor 
+              documentId={selectedNodeId} 
+              onSyncStatusChange={setSyncStatus} 
+              nodes={graphData.nodes}
+              onAddLink={handleAddLink}
+            />
 
           </div>
         </div>

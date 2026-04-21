@@ -22,7 +22,7 @@ function LandingPage({ onEnter }) {
       
       {/* 0. GLASS NAVIGATION (Modified + Extended) */}
       <nav className="editorial-nav">
-        <div className="nav-logo">brain<span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>.exe</span></div>
+        <div className="nav-logo">2ndBrain<span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>.exe</span></div>
         <button className="nav-btn" onClick={onEnter}>Initialize</button>
       </nav>
 

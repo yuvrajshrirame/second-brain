@@ -1,8 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth, GoogleAuthProvider } from "firebase/auth"; // NEW IMPORTS
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
-// REPLACE THIS OBJECT WITH YOUR ACTUAL KEYS FROM STEP 2
+// Firebase keys are pushed to github because the repo is private as of now. once it becomes public, revoke the keys or add firebase.js in .gitignore
 const firebaseConfig = {
   apiKey: "AIzaSyDYrXlL7EiaVNghSWnf6dtnDTdO1pImfOQ",
   authDomain: "brain-exe-6a364.firebaseapp.com",
