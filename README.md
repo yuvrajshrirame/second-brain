@@ -43,5 +43,5 @@
 
 ### 1. Clone the Repository
 ```bash
-git clone [https://github.com/yourusername/brain-exe.git](https://github.com/yourusername/brain-exe.git)
+git clone [https://github.com/yuvrajshrirame/brain-exe.git](https://github.com/yuvrajshrirame/brain-exe.git)
 cd brain-exe
