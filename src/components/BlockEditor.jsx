@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { filterSuggestionItems } from "@blocknote/core"; // NEW IMPORT
+import { filterSuggestionItems } from "@blocknote/core"; 
 import { useCreateBlockNote, SuggestionMenuController, getDefaultReactSlashMenuItems } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine"; 
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, addDoc, collection } from 'firebase/firestore';
 import { db } from '../firebase';
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css"; 
@@ -33,40 +33,71 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, onA
 
   // --- THE NEURAL LINKING ENGINE ---
   const getMentionItems = async (query) => {
-    // Filter nodes based on what you type after the '@'
     const filteredNodes = nodes.filter(node => 
       node.name.toLowerCase().includes(query.toLowerCase()) && 
-      node.id !== documentId // Prevent linking to itself!
+      node.id !== documentId
     );
 
-    return filteredNodes.map((node) => ({
-      title: node.name,
+    const items = filteredNodes.map((node) => ({
+      title: `Link to: ${node.name}`,
       onItemClick: () => {
-        // 1. Insert the aesthetic bracket link into the text
-        editor.insertText(`[[${node.name}]] `);
-        
-        // 2. Tell the Vault to update the physics graph in the cloud
+        editor.insertInlineContent([
+          {
+            type: "text",
+            text: `[[${node.name}]]`,
+            styles: { textColor: "yellow" } 
+          },
+          { type: "text", text: " ", styles: {} }
+        ]);
         onAddLink(documentId, node.id);
       },
     }));
+
+    const exactMatch = nodes.some(n => n.name.toLowerCase() === query.toLowerCase());
+    
+    if (query.trim().length > 0 && !exactMatch) {
+      items.push({
+        title: `+ Create new node: "${query}"`,
+        onItemClick: async () => {
+          onSyncStatusChange('syncing');
+          const newNodeRef = await addDoc(collection(db, 'nodes'), { 
+            name: query, 
+            content: '',
+            val: 3, 
+            createdAt: Date.now() 
+          });
+
+          editor.insertInlineContent([
+            {
+              type: "text",
+              text: `[[${query}]]`,
+              styles: { textColor: "yellow" }
+            },
+            { type: "text", text: " ", styles: {} }
+          ]);
+
+          onAddLink(documentId, newNodeRef.id);
+          onSyncStatusChange('saved');
+        }
+      });
+    }
+
+    return items;
   };
 
   return (
-    <div style={{ color: '#fff', marginTop: '1rem' }}>
+    <div className="notion-editor-wrapper" style={{ marginTop: '0.5rem' }}>
       <BlockNoteView 
         editor={editor} 
         theme="dark" 
         onChange={handleEditorChange} 
       >
-        {/* CORRECTED: We wrap it in a function and filter it so it doesn't crash */}
         <SuggestionMenuController
           triggerCharacter={"/"}
           getItems={async (query) =>
             filterSuggestionItems(getDefaultReactSlashMenuItems(editor), query)
           }
         />
-        
-        {/* Your custom @ linking menu */}
         <SuggestionMenuController
           triggerCharacter={"@"}
           getItems={getMentionItems}

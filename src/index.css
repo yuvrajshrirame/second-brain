@@ -752,3 +752,27 @@ html, body {
   box-shadow: 0 0 10px rgba(207, 168, 97, 0.5);
   transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+
+/* =========================================
+   BLOCKNOTE NOTION-STYLE OVERRIDES
+   ========================================= */
+.notion-editor-wrapper {
+  --bn-colors-editor-background: transparent !important; 
+}
+
+.notion-editor-wrapper .bn-container,
+.notion-editor-wrapper .bn-editor,
+.notion-editor-wrapper .mantine-Paper-root {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.notion-editor-wrapper .bn-block-content {
+  font-family: var(--font-sans) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  line-height: 1.7 !important;
+}
+
+.notion-editor-wrapper .bn-block-content[data-is-empty-and-focused]::before {
+  color: rgba(255, 255, 255, 0.2) !important;
+}
