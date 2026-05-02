@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2ndBrain.exe // Vault</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- External Libraries via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://unpkg.com/force-graph"></script>
+
+    <style>
+        .sidebar {
+            width: 260px; border-right: 1px solid var(--border); padding: 20px;
+            display: flex; flex-direction: column; background: #050505;
+        }
+        .sidebar-logo { font-family: var(--font-mono); font-size: 1.2rem; margin-bottom: 30px; font-weight: bold; }
+        .folder { padding: 10px; cursor: pointer; color: var(--muted); transition: 0.2s; display: flex; align-items: center; gap: 10px; }
+        .folder:hover, .folder.active { color: var(--text); background: rgba(255,255,255,0.05); border-radius: 6px; }
+        .sign-out-btn { margin-top: auto; font-size: 0.8rem; background: transparent; color: var(--muted); text-align: left; padding: 10px; }
+        .sign-out-btn:hover { color: #ff4444; background: transparent; transform: none; }
+        
+        .editor-container {
+            flex: 1; padding: 40px 10%; display: flex; flex-direction: column; overflow-y: auto;
+        }
+        .editor-title { font-size: 2.5rem; background: transparent; border: none; color: white; outline: none; margin-bottom: 20px; font-weight: bold; }
+        .editor-body { flex: 1; font-size: 1.1rem; line-height: 1.7; outline: none; color: #ccc; }
+        [contenteditable]:empty:before { content: attr(placeholder); color: var(--muted); pointer-events: none; display: block; }
+
+        .graph-panel {
+            width: 350px; border-left: 1px solid var(--border); background: #030304;
+            display: flex; flex-direction: column;
+        }
+        .graph-header { padding: 20px; font-family: var(--font-mono); font-size: 0.9rem; color: var(--accent); border-bottom: 1px solid var(--border); }
+        #graph-render { flex: 1; width: 100%; height: 100%; }
+    </style>
+</head>
+<body class="fade-in">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-logo">Vault<span class="accent-text">.</span></div>
+        <div class="folder active">📁 Neural_Net</div>
+        <div class="folder">📁 Project_Genesis</div>
+        <div class="folder">📁 Archive</div>
+        
+        <!-- Back to Start -->
+        <button class="btn sign-out-btn" onclick="window.location.href='index.html'">← Sign Out Session</button>
+    </div>
+
+    <!-- Editor -->
+    <div class="editor-container">
+        <input type="text" class="editor-title" value="Architecting the Mind">
+        <div class="editor-body" contenteditable="true" placeholder="Press '/' for commands, or start typing...">
+            Welcome to your new cognitive environment.<br><br>
+            Because we separated the files, you are now sitting in <b>vault.html</b>. The CSS is neatly stored in <b>style.css</b>. You can type freely here, and notice the graph on the right represents the bi-directional links.
+        </div>
+    </div>
+
+    <!-- Knowledge Graph -->
+    <div class="graph-panel">
+        <div class="graph-header">Live Knowledge Graph</div>
+        <div id="graph-render"></div>
+    </div>
+
+    <script>
+        // Trigger gamification Confetti on load
+        window.onload = () => {
+            const colors = ['#cfa861', '#ffffff', '#1a1a1a'];
+            confetti({ particleCount: 60, angle: 60, spread: 70, origin: { x: 0, y: 0.8 }, colors, zIndex: 9999 });
+            confetti({ particleCount: 60, angle: 120, spread: 70, origin: { x: 1, y: 0.8 }, colors, zIndex: 9999 });
+            initGraph();
+        };
+
+        // Knowledge Graph Renderer (Force Graph 2D)
+        function initGraph() {
+            const graphData = {
+                nodes: [
+                    { id: '1', name: 'Root', val: 3, color: '#cfa861' },
+                    { id: '2', name: 'Ideas', val: 1, color: '#eaeaea' },
+                    { id: '3', name: 'Tasks', val: 1, color: '#eaeaea' },
+                    { id: '4', name: 'React', val: 1, color: '#666' }
+                ],
+                links: [
+                    { source: '1', target: '2' },
+                    { source: '1', target: '3' },
+                    { source: '2', target: '4' }
+                ]
+            };
+
+            const container = document.getElementById('graph-render');
+            ForceGraph()(container)
+                .graphData(graphData)
+                .width(350)
+                .height(container.clientHeight)
+                .backgroundColor('#030304')
+                .nodeColor('color')
+                .linkColor(() => '#333')
+                .nodeRelSize(4);
+        }
+
+        // Folder Click Interaction
+        document.querySelectorAll('.folder').forEach(folder => {
+            folder.addEventListener('click', function() {
+                document.querySelectorAll('.folder').forEach(f => f.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
