@@ -14,11 +14,25 @@ function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      
+      // THE FIX: Intercept the state machine based on Firebase auth
+      if (currentUser) {
+        // If Firebase remembers them, skip the landing page!
+        // We route them to 'booting' so they still get the cool loading 
+        // animation before dropping into the Vault.
+        setAppState('booting'); 
+      } else {
+        // If they genuinely aren't logged in, ensure they stay on marketing
+        setAppState('marketing');
+      }
+
       setIsCheckingAuth(false);
     });
+    
     return () => unsubscribe();
   }, []);
 
+  // Your seamless black screen during the split-second Firebase check
   if (isCheckingAuth) return <div style={{ height: '100vh', backgroundColor: '#020203' }}></div>;
 
   return (
