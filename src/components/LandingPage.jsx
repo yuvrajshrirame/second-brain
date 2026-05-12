@@ -224,7 +224,7 @@ function LandingPage({ onEnter }) {
       {/* 4. THE GRAND FOOTER (Minimal mono style from Image 9) */}
       <footer style={{ background: '#000', borderTop: '1px solid #1a1a1a', color: '#444', textAlign: 'center', padding: '1rem', position: 'relative', zIndex: 10 }}>
          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', letterSpacing: '2px' }}>
-           SYSTEM.v1.6.0.1 // COGNITIVE ARCHITECTURE // DESIGNED FOR FOCUS
+           SYSTEM.v2.0 // COGNITIVE ARCHITECTURE // DESIGNED FOR FOCUS // MADE WITH ❤️ BY YUVRAJ SHRIRAME
          </div>
       </footer>
 
