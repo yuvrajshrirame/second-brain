@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom'; // <-- WE IMPORTED PORTAL
 import { filterSuggestionItems } from "@blocknote/core"; 
 import { useCreateBlockNote, SuggestionMenuController, getDefaultReactSlashMenuItems } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine"; 
 import { doc, getDoc, updateDoc, addDoc, collection } from 'firebase/firestore';
 import { db } from '../firebase';
 import { AnimatePresence, motion } from 'framer-motion';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css"; 
 
@@ -43,6 +45,11 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
   // --- AUTO-SYNAPSE STATE ---
   const [suggestedSynapse, setSuggestedSynapse] = useState(null);
 
+  // --- NEURAL COPILOT STATE ---
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiInput, setAiInput] = useState("");
+  const [aiTargetBlock, setAiTargetBlock] = useState(null);
+
   const handleEditorChange = () => {
     if (!documentId || !editor) return;
     onSyncStatusChange('unsaved');
@@ -55,7 +62,6 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
         const docRef = doc(db, 'nodes', documentId);
         await updateDoc(docRef, { content: currentContent });
         
-        // 1. Extract plain text from the editor
         const plainText = editor.document.map(block => {
           if (Array.isArray(block.content)) {
             return block.content.map(c => c.text || '').join('');
@@ -63,7 +69,6 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
           return '';
         }).join(' ').toLowerCase();
 
-        // 2. Scan for unlinked connections using Semantic NLP
         let foundSuggestion = null;
         for (const node of nodes) {
           if (node.id === documentId || !node.name || node.name.length < 3) continue;
@@ -82,7 +87,6 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
         
         setSuggestedSynapse(foundSuggestion);
 
-        // --- 3. STALE SYNAPSE CLEANUP ENGINE ---
         const activeLinks = links.filter(l => {
           const sId = typeof l.source === 'object' ? l.source.id : l.source;
           const tId = typeof l.target === 'object' ? l.target.id : l.target;
@@ -100,7 +104,6 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
             const hasSemanticMatch = isSemanticMatch(plainText, otherNode.name);
             const hasLiteralMatch = plainText.includes(`[[${otherNode.name.toLowerCase()}]]`);
 
-            // If the text has been deleted, sever the neural link!
             if (!hasSemanticMatch && !hasLiteralMatch) {
               onRemoveLink(link.id);
             }
@@ -122,6 +125,61 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
       setSuggestedSynapse(null); 
     }
   };
+
+  // --- NEURAL COPILOT EXECUTION ENGINE ---
+  const handleExecuteAI = async () => {
+    if (!aiInput.trim() || !aiTargetBlock) return;
+
+    const query = aiInput;
+    const currentBlock = aiTargetBlock;
+
+    setIsAiModalOpen(false);
+    setAiInput("");
+    
+    editor.updateBlock(currentBlock, {
+      type: "paragraph",
+      content: "✨ Fetching neural response..."
+    });
+
+    try {
+      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); 
+      
+      const allText = editor.document.map(b => b.content ? b.content.map(c => c.text).join('') : '').join('\n');
+      
+      const promptText = `You are an AI co-pilot inside a high-fidelity Zettelkasten note-taking app. 
+      Here is the current document's context:\n"${allText}"\n\n
+      The user wants you to do the following: "${query}"
+      Respond using rich Markdown formatting (headings, bullet points, bold text, and code blocks) to perfectly structure your answer.`;
+
+      const result = await model.generateContent(promptText);
+      const response = await result.response;
+      const text = response.text();
+
+      const parsedBlocks = await editor.tryParseMarkdownToBlocks(text);
+      editor.replaceBlocks([currentBlock], parsedBlocks);
+
+      handleEditorChange();
+
+    } catch (error) {
+      console.error(error);
+      editor.updateBlock(currentBlock, {
+        type: "paragraph",
+        content: "❌ Neural Link Failed. Check your API key or network connection."
+      });
+    }
+  };
+
+  const insertAIAssistant = (editor) => ({
+    title: "Neural Copilot",
+    onItemClick: () => {
+      setAiTargetBlock(editor.getTextCursorPosition().block);
+      setIsAiModalOpen(true);
+    },
+    aliases: ["ai", "copilot", "gemini", "generate"],
+    group: "Neural Tools", 
+    icon: <span style={{ fontSize: '14px' }}>✨</span>,
+  });
 
   const getMentionItems = async (query) => {
     const filteredNodes = nodes.filter(node => 
@@ -186,7 +244,7 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
         <SuggestionMenuController
           triggerCharacter={"/"}
           getItems={async (query) =>
-            filterSuggestionItems(getDefaultReactSlashMenuItems(editor), query)
+            filterSuggestionItems([...getDefaultReactSlashMenuItems(editor), insertAIAssistant(editor)], query)
           }
         />
         <SuggestionMenuController
@@ -195,52 +253,119 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
         />
       </BlockNoteView>
 
-      <AnimatePresence>
-        {suggestedSynapse && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            style={{
-              position: 'fixed',
-              bottom: '40px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: '#050508',
-              border: '1px solid var(--accent)',
-              padding: '12px 24px',
-              borderRadius: '4px',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px',
-              zIndex: 9999,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '8px', height: '8px', background: 'var(--accent)', borderRadius: '50%', boxShadow: '0 0 10px var(--accent)' }}></div>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#fff' }}>
-                Synapse Detected: <span style={{ color: 'var(--accent)' }}>{suggestedSynapse.name}</span>
-              </span>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button 
-                onClick={handleAcceptSynapse}
-                style={{ background: 'var(--accent)', color: '#000', border: 'none', padding: '6px 12px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', borderRadius: '2px' }}
+      {/* --- CYBER MODAL TELEPORTED VIA PORTAL --- */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {isAiModalOpen && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(5px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <motion.div 
+                initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                exit={{ scale: 0.9, y: 20, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                style={{ background: '#050508', border: '1px solid #1a1a1a', borderLeft: '3px solid var(--accent)', width: '500px', padding: '2rem', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}
               >
-                Form Link
-              </button>
-              <button 
-                onClick={() => setSuggestedSynapse(null)}
-                style={{ background: 'transparent', color: '#888', border: '1px solid #333', padding: '6px 12px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', cursor: 'pointer', borderRadius: '2px' }}
-              >
-                Dismiss
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <h3 style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)', fontSize: '1rem', marginTop: 0, letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '14px' }}>✨</span> NEURAL COPILOT
+                </h3>
+                <p style={{ color: '#888', fontFamily: 'var(--font-sans)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                  What should I write, analyze, or expand on?
+                </p>
+                
+                <input 
+                  autoFocus
+                  value={aiInput}
+                  onChange={(e) => setAiInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleExecuteAI();
+                    if (e.key === 'Escape') {
+                      setIsAiModalOpen(false);
+                      setAiInput("");
+                    }
+                  }}
+                  placeholder="e.g. Summarize the concept of React Hooks..."
+                  style={{ background: '#0a0a0f', border: '1px solid #333', color: '#fff', width: '100%', padding: '0.8rem', outline: 'none', fontFamily: 'var(--font-sans)', fontSize: '0.9rem', marginBottom: '1.5rem', borderRadius: '2px', boxSizing: 'border-box' }}
+                />
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                  <button 
+                    onClick={() => {
+                      setIsAiModalOpen(false);
+                      setAiInput("");
+                    }}
+                    style={{ background: 'transparent', color: '#fff', border: '1px solid #333', padding: '0.6rem 1.2rem', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', cursor: 'pointer', borderRadius: '2px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleExecuteAI}
+                    style={{ background: 'var(--accent)', color: '#000', border: 'none', padding: '0.6rem 1.2rem', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer', borderRadius: '2px' }}
+                  >
+                    Initialize Run
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* --- AUTO-SYNAPSE UI TELEPORTED VIA PORTAL --- */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {suggestedSynapse && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              style={{
+                position: 'fixed',
+                bottom: '40px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: '#050508',
+                border: '1px solid var(--accent)',
+                padding: '12px 24px',
+                borderRadius: '4px',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                zIndex: 9999,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '8px', height: '8px', background: 'var(--accent)', borderRadius: '50%', boxShadow: '0 0 10px var(--accent)' }}></div>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#fff' }}>
+                  Synapse Detected: <span style={{ color: 'var(--accent)' }}>{suggestedSynapse.name}</span>
+                </span>
+              </div>
+              
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={handleAcceptSynapse}
+                  style={{ background: 'var(--accent)', color: '#000', border: 'none', padding: '6px 12px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', borderRadius: '2px' }}
+                >
+                  Form Link
+                </button>
+                <button 
+                  onClick={() => setSuggestedSynapse(null)}
+                  style={{ background: 'transparent', color: '#888', border: '1px solid #333', padding: '6px 12px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', cursor: 'pointer', borderRadius: '2px' }}
+                >
+                  Dismiss
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
       
     </div>
   );
