@@ -125,9 +125,6 @@ function Vault({ user }) {
       folder: activeFolder === 'all' ? null : activeFolder 
     });
     
-    if (selectedNodeId) {
-      await addDoc(collection(db, 'links'), { source: selectedNodeId, target: newNodeRef.id });
-    }
     setSelectedNodeId(newNodeRef.id);
   };
 
@@ -155,6 +152,11 @@ function Vault({ user }) {
     if (!linkExists) {
       await addDoc(collection(db, 'links'), { source: sourceId, target: targetId });
     }
+  };
+
+  const handleRemoveLink = async (linkId) => {
+    if (!linkId) return;
+    await deleteDoc(doc(db, 'links', linkId));
   };
 
   const triggerDeleteNode = () => {
@@ -243,7 +245,7 @@ function Vault({ user }) {
       isOpen: true,
       title: 'DISCONNECT NEURAL LINK?',
       message: 'Are you sure you want to sign out and lock the vault? End-to-end encryption will be re-engaged.',
-      type: 'warning', // Uses the gold accent color
+      type: 'warning',
       confirmText: 'Sign Out',
       onConfirm: async () => {
         setModalConfig(prev => ({ ...prev, isOpen: false }));
@@ -321,7 +323,6 @@ function Vault({ user }) {
         )}
       </AnimatePresence>
 
-      {/* LEFT COLUMN: NAVIGATION & DIRECTORIES */}
       <div className={`vault-left-col ${isSidebarCollapsed ? 'collapsed' : ''}`}>
         <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: 0 }}>
@@ -511,7 +512,6 @@ function Vault({ user }) {
         </div>
 
         <div style={{ borderTop: '1px solid #1a1a1a', paddingBottom: '1rem' }}>
-          {/* UPDATED: Sign Out button now triggers the modal */}
           <div className="vault-nav-item" onClick={triggerSignOut}>
             <Icon path="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
             <span className="nav-text">Sign Out</span>
@@ -519,7 +519,6 @@ function Vault({ user }) {
         </div>
       </div>
 
-      {/* CENTER COLUMN: THE EDITOR */}
       <div className={`vault-center-col ${isFullScreen ? 'fullscreen' : ''}`}>
         <div className="editor-top-nav">
           
@@ -579,13 +578,19 @@ function Vault({ user }) {
                 onBlur={handleTitleBlur} 
                 placeholder="Untitled"
               />
-              <BlockEditor documentId={selectedNodeId} onSyncStatusChange={setSyncStatus} nodes={graphData.nodes} onAddLink={handleAddLink} />
+              <BlockEditor 
+                documentId={selectedNodeId} 
+                onSyncStatusChange={setSyncStatus} 
+                nodes={graphData.nodes} 
+                links={graphData.links}
+                onAddLink={handleAddLink} 
+                onRemoveLink={handleRemoveLink}
+              />
             </div>
           )}
         </div>
       </div>
 
-      {/* RIGHT COLUMN: GRAPH & CLOUD NODES */}
       <div className="vault-right-col" style={{ display: isFullScreen ? 'none' : 'flex' }}>
         
         <div className="widget-panel" style={{ padding: 0, height: '300px', position: 'relative', display: 'flex', flexDirection: 'column' }}>
