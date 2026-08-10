@@ -38,7 +38,7 @@ function isSemanticMatch(plainText, nodeName) {
 }
 
 // --- 1. THE ACTUAL EDITOR ---
-function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, links, onAddLink, onRemoveLink }) {
+function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, links, onAddLink, onRemoveLink, user }) {
   const editor = useCreateBlockNote({ initialContent });
   const debounceTimer = useRef(null);
   
@@ -213,7 +213,8 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
             name: query, 
             content: '',
             val: 3, 
-            createdAt: Date.now() 
+            createdAt: Date.now(),
+            userId: user.uid
           });
 
           editor.insertInlineContent([
@@ -372,7 +373,7 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
 }
 
 // --- 2. THE DATA LOADER ---
-function BlockEditor({ documentId, onSyncStatusChange, nodes, links, onAddLink, onRemoveLink }) {
+function BlockEditor({ documentId, onSyncStatusChange, nodes, links, onAddLink, onRemoveLink, user }) {
   const [initialContent, setInitialContent] = useState("loading");
 
   useEffect(() => {
@@ -407,6 +408,7 @@ function BlockEditor({ documentId, onSyncStatusChange, nodes, links, onAddLink, 
       links={links}
       onAddLink={onAddLink}
       onRemoveLink={onRemoveLink}
+      user={user}
     />
   );
 }

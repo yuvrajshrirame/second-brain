@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
-import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, query, where } from 'firebase/firestore';
 import { signInWithPopup, signOut } from 'firebase/auth';
 import { db, auth, provider } from '../firebase';
 import GraphEngine from './GraphEngine';
@@ -60,10 +60,14 @@ function Vault({ user }) {
   }, []);
 
   // --- REAL-TIME SYNC ---
+  // SECURITY: every query below is scoped to the signed-in user's own documents
+  // via a `where('userId', '==', user.uid)` filter, so one account never receives
+  // another account's nodes/links/folders in its snapshot.
   useEffect(() => {
     if (!user) return;
 
-    const unsubscribeNodes = onSnapshot(collection(db, 'nodes'), (snapshot) => {
+    const nodesQuery = query(collection(db, 'nodes'), where('userId', '==', user.uid));
+    const unsubscribeNodes = onSnapshot(nodesQuery, (snapshot) => {
       const fetchedNodes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setGraphData(prev => ({ ...prev, nodes: fetchedNodes }));
       if (!selectedNodeId && fetchedNodes.length > 0) {
@@ -72,12 +76,14 @@ function Vault({ user }) {
       }
     });
 
-    const unsubscribeLinks = onSnapshot(collection(db, 'links'), (snapshot) => {
+    const linksQuery = query(collection(db, 'links'), where('userId', '==', user.uid));
+    const unsubscribeLinks = onSnapshot(linksQuery, (snapshot) => {
       const fetchedLinks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setGraphData(prev => ({ ...prev, links: fetchedLinks }));
     });
 
-    const unsubscribeFolders = onSnapshot(collection(db, 'folders'), (snapshot) => {
+    const foldersQuery = query(collection(db, 'folders'), where('userId', '==', user.uid));
+    const unsubscribeFolders = onSnapshot(foldersQuery, (snapshot) => {
       const fetchedFolders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       fetchedFolders.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
       setFolders(fetchedFolders);
@@ -122,7 +128,8 @@ function Vault({ user }) {
       name: 'Untitled', 
       val: 3, 
       createdAt: Date.now(),
-      folder: activeFolder === 'all' ? null : activeFolder 
+      folder: activeFolder === 'all' ? null : activeFolder,
+      userId: user.uid
     });
     
     setSelectedNodeId(newNodeRef.id);
@@ -150,7 +157,7 @@ function Vault({ user }) {
     });
 
     if (!linkExists) {
-      await addDoc(collection(db, 'links'), { source: sourceId, target: targetId });
+      await addDoc(collection(db, 'links'), { source: sourceId, target: targetId, userId: user.uid });
     }
   };
 
@@ -206,7 +213,8 @@ function Vault({ user }) {
 
     await addDoc(collection(db, 'folders'), {
       name: nameToSave,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      userId: user.uid
     });
   };
 
@@ -585,6 +593,7 @@ function Vault({ user }) {
                 links={graphData.links}
                 onAddLink={handleAddLink} 
                 onRemoveLink={handleRemoveLink}
+                user={user}
               />
             </div>
           )}
