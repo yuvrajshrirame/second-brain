@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🧠 2ndBrain.exe</h1>
+  <h1><img src="./public/puzzle.png" width="40" style="vertical-align: middle;" /> 2ndBrain</h1>
   <p><b>Architect the architecture of your mind.</b></p>
   
   [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](#)
@@ -12,7 +12,7 @@
   <br />
 </div>
 
-> **2ndBrain.exe** is a note-taking app that turns your scattered ideas into a living, connected knowledge graph — think Notion meets Obsidian, with a dark cyberpunk aesthetic.
+> **2ndBrain** is a note-taking app that turns your scattered ideas into a living, connected knowledge graph — think Notion meets Obsidian, with a dark cyberpunk aesthetic.
 
 Instead of burying notes in folders, you link them together. The app visualizes those links as an interactive graph, suggests new connections using NLP, and even has an AI writing assistant built right into the editor. Everything syncs to the cloud in real time, and there's a leveling system that rewards you for connecting ideas.
 
@@ -110,13 +110,13 @@ The app uses a simple three-state system. When you open it, Firebase checks if y
 
 ```mermaid
 flowchart TD
-    A["🌐 App Loads"] --> B{"Firebase Auth Check"}
-    B -->|"User is logged in"| D["⚡ Boot Sequence"]
-    B -->|"No session found"| C["📄 Landing Page"]
+    A["App Loads"] --> B{"Firebase Auth Check"}
+    B -->|"User is logged in"| D["Boot Sequence"]
+    B -->|"No session found"| C["Landing Page"]
     C -->|"Click Initialize"| D
     D -->|"Animation complete"| E{"User signed in?"}
-    E -->|"Yes"| F["🔓 Vault (Workspace)"]
-    E -->|"No"| G["🔒 Lock Screen"]
+    E -->|"Yes"| F["Vault (Workspace)"]
+    E -->|"No"| G["Lock Screen"]
     G -->|"Google Sign-In"| F
 
     style A fill:#1a1a2e,stroke:#cfa861,color:#fff
@@ -134,36 +134,36 @@ This diagram shows what happens when you type in the editor. Every keystroke (de
 
 ```mermaid
 flowchart TD
-    subgraph Editor["✏️ Block Editor"]
+    subgraph Editor["Block Editor"]
         A["User types content"] --> B["1s debounce timer"]
     end
 
-    subgraph Sync["☁️ Cloud Sync"]
+    subgraph Sync["Cloud Sync"]
         B --> C["Save content to Firestore"]
         C --> D["Update sync indicator"]
         D --> D1["● Synced"]
     end
 
-    subgraph NLP["🔗 Auto-Synapse Engine"]
+    subgraph NLP["Auto-Synapse Engine"]
         C --> E["Extract plain text from blocks"]
         E --> F["For each unlinked note title:"]
         F --> G["Tokenize → filter stop words → match keywords"]
         G --> H{"≥ 75% overlap?"}
-        H -->|"Yes"| I["🔔 Show toast: Synapse Detected"]
+        H -->|"Yes"| I["Show toast: Synapse Detected"]
         H -->|"No"| J["Skip"]
         I --> K{"User clicks Form Link?"}
         K -->|"Yes"| L["Create link in Firestore"]
         K -->|"Dismiss"| M["Hide toast"]
     end
 
-    subgraph Cleanup["🧹 Stale Link Cleanup"]
+    subgraph Cleanup["Stale Link Cleanup"]
         C --> N["For each existing link:"]
         N --> O{"Content still references\nthe linked note?"}
         O -->|"Yes"| P["Keep link"]
         O -->|"No"| Q["Delete link from Firestore"]
     end
 
-    subgraph Graph["📊 Graph Engine"]
+    subgraph Graph["Graph Engine"]
         L --> R["Firestore onSnapshot triggers"]
         Q --> R
         R --> S["Re-render physics graph"]
@@ -181,16 +181,16 @@ flowchart TD
 When you trigger the Neural Copilot from the slash menu, here's the full pipeline from your prompt to the final blocks appearing in your note.
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["Type / in editor"] --> B["Select Neural Copilot"]
     B --> C["Modal opens"]
     C --> D["Type instruction"]
     D --> E["Press Enter"]
-    E --> F["Show placeholder:\n✨ Fetching..."]
+    E --> F["Show placeholder:\nFetching..."]
     F --> G["Send to Gemini 2.5 Flash\n(full doc as context)"]
     G --> H{"API Success?"}
     H -->|"Yes"| I["Parse Markdown → Blocks"]
-    H -->|"No"| J["Show ❌ error in block"]
+    H -->|"No"| J["Show error in block"]
     I --> K["Replace placeholder\nwith AI blocks"]
     K --> L["Trigger auto-save"]
 
