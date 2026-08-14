@@ -16,6 +16,8 @@
 
 Instead of burying notes in folders, you link them together. The app visualizes those links as an interactive graph, suggests new connections using NLP, and even has an AI writing assistant built right into the editor. Everything syncs to the cloud in real time, and there's a leveling system that rewards you for connecting ideas.
 
+> **🚀 Official Documentation:** [docs.uraj.dev/2ndbrain](https://docs.uraj.dev/2ndbrain) — Read deep dives into the state machine, custom physics engine, AI copilot, and Firestore schema that power 2ndBrain.
+
 ---
 
 ## 🚀 What's New in v2.0

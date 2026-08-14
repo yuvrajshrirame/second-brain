@@ -23,7 +23,23 @@ function LandingPage({ onEnter }) {
       {/* 0. GLASS NAVIGATION (Modified + Extended) */}
       <nav className="editorial-nav">
         <div className="nav-logo"><span style={{ color: 'var(--accent)'}}>2nd</span>Brain</div>
-        <button className="nav-btn" onClick={onEnter}>Initialize</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+          <a 
+            href="https://docs.uraj.dev/2ndbrain" 
+            target="_blank" 
+            rel="noreferrer"
+            style={{ 
+              color: '#888', textDecoration: 'none', fontFamily: 'var(--font-sans)', 
+              fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '2px', 
+              transition: 'color 0.3s ease', cursor: 'pointer' 
+            }}
+            onMouseEnter={(e) => e.target.style.color = '#fff'}
+            onMouseLeave={(e) => e.target.style.color = '#888'}
+          >
+            Explore Docs
+          </a>
+          <button className="nav-btn" onClick={onEnter}>Initialize</button>
+        </div>
       </nav>
 
       {/* 1. THE REFINED HERO SECTION */}
@@ -224,7 +240,16 @@ function LandingPage({ onEnter }) {
       {/* 4. THE GRAND FOOTER (Minimal mono style from Image 9) */}
       <footer style={{ background: '#000', borderTop: '1px solid #1a1a1a', color: '#444', textAlign: 'center', padding: '1rem', position: 'relative', zIndex: 10 }}>
          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', letterSpacing: '2px' }}>
-           SYSTEM.v2.0 // COGNITIVE ARCHITECTURE // DESIGNED FOR FOCUS // MADE WITH ❤️ BY YUVRAJ SHRIRAME
+           SYSTEM.v2.0 // COGNITIVE ARCHITECTURE // DESIGNED FOR FOCUS // MADE WITH ❤️ BY YUVRAJ SHRIRAME // <a 
+             href="https://docs.uraj.dev/2ndbrain" 
+             target="_blank" 
+             rel="noreferrer"
+             style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s ease' }}
+             onMouseEnter={(e) => e.target.style.color = '#fff'}
+             onMouseLeave={(e) => e.target.style.color = '#444'}
+           >
+             EXPLORE DOCUMENTATION
+           </a>
          </div>
       </footer>
 

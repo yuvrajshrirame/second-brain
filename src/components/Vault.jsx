@@ -519,8 +519,18 @@ function Vault({ user }) {
 
         </div>
 
-        <div style={{ borderTop: '1px solid #1a1a1a', paddingBottom: '1rem' }}>
-          <div className="vault-nav-item" onClick={triggerSignOut}>
+        <div style={{ borderTop: '1px solid #1a1a1a', paddingBottom: '1rem', paddingTop: '0.5rem' }}>
+          <a 
+            href="https://docs.uraj.dev/2ndbrain" 
+            target="_blank" 
+            rel="noreferrer" 
+            className="vault-nav-item" 
+            style={{ textDecoration: 'none', color: 'inherit', display: 'flex' }}
+          >
+            <Icon path="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+            <span className="nav-text">Documentation</span>
+          </a>
+          <div className="vault-nav-item" onClick={triggerSignOut} style={{ marginTop: '0.2rem' }}>
             <Icon path="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
             <span className="nav-text">Sign Out</span>
           </div>
