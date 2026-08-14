@@ -119,9 +119,7 @@ html, body {
   color: var(--accent); font-family: monospace; font-size: 0.8rem; letter-spacing: 1px;
 }
 
-/* =========================================
-   V1.4 MASTERPIECE: EDITORIAL & GLASS UI
-   ========================================= */
+/* V1.4 MASTERPIECE: EDITORIAL & GLASS UI */
 
 /* --- ANIMATIONS --- */
 @keyframes fadeUp {
@@ -289,9 +287,7 @@ html, body {
   pointer-events: none;
 }
 
-/* =========================================
-   V1.6 VAULT COCKPIT STYLES
-   ========================================= */
+/* V1.6 VAULT COCKPIT STYLES */
 
 .vault-layout {
   display: flex;
@@ -483,9 +479,7 @@ html, body {
   text-transform: uppercase;
 }
 
-/* =========================================
-   V1.5 NOTION-STYLE EDITOR UPGRADES
-   ========================================= */
+/* V1.5 NOTION-STYLE EDITOR UPGRADES */
 
 /* Smooth page load animation */
 @keyframes pageFadeIn {
@@ -530,9 +524,7 @@ html, body {
   background: #444;
 }
 
-/* =========================================
-   V1.6.0.1 GRAND COCKPIT LAYOUT
-   ========================================= */
+/* V1.6.0.1 GRAND COCKPIT LAYOUT */
 
 /* New color variables */
 :root {
@@ -791,11 +783,7 @@ html, body {
   margin-top: 1rem;
 }
 
-/* =========================================
-/* =========================================
-/* =========================================
-   GAMIFICATION: COGNITIVE LEVEL BAR
-   ========================================= */
+/* GAMIFICATION: COGNITIVE LEVEL BAR */
 .xp-container {
   padding: 0 1.5rem 1rem 1.5rem;
   border-bottom: 1px solid #1a1a1a;
@@ -840,9 +828,7 @@ html, body {
   transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* =========================================
-   BLOCKNOTE NOTION-STYLE OVERRIDES
-   ========================================= */
+/* BLOCKNOTE NOTION-STYLE OVERRIDES */
 .notion-editor-wrapper {
   --bn-colors-editor-background: transparent !important; 
 }
@@ -864,9 +850,7 @@ html, body {
   color: rgba(255, 255, 255, 0.2) !important;
 }
 
-/* =========================================
-   CUSTOM CYBERPUNK SLASH MENU
-   ========================================= */
+/* CUSTOM CYBERPUNK SLASH MENU */
 .cyber-slash-menu-wrapper {
   background: rgba(10, 10, 15, 0.95);
   backdrop-filter: blur(10px);
@@ -925,9 +909,7 @@ html, body {
   box-sizing: border-box;
 }
 
-/* =========================================
-   GAMIFICATION: COGNITIVE LEVEL BAR
-   ========================================= */
+/* GAMIFICATION: COGNITIVE LEVEL BAR */
 .xp-container {
   padding: 0 1.5rem 1rem 1.5rem;
   border-bottom: 1px solid #1a1a1a;
@@ -972,9 +954,7 @@ html, body {
   transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* =========================================
-   BLOCKNOTE NOTION-STYLE OVERRIDES
-   ========================================= */
+/* BLOCKNOTE NOTION-STYLE OVERRIDES */
 .notion-editor-wrapper {
   --bn-colors-editor-background: transparent !important; 
 }
@@ -996,9 +976,7 @@ html, body {
   color: rgba(255, 255, 255, 0.2) !important;
 }
 
-/* =========================================
-   CUSTOM CYBERPUNK SLASH MENU
-   ========================================= */
+/* CUSTOM CYBERPUNK SLASH MENU */
 .cyber-slash-menu-wrapper {
   background: rgba(10, 10, 15, 0.95);
   backdrop-filter: blur(10px);
