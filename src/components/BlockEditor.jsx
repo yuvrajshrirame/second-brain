@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom'; // <-- WE IMPORTED PORTAL
 import { filterSuggestionItems } from "@blocknote/core"; 
 import { useCreateBlockNote, SuggestionMenuController, getDefaultReactSlashMenuItems } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine"; 
+import { BlockNoteSchema, defaultBlockSpecs } from "@blocknote/core";
+import { MermaidBlock } from "./MermaidBlock";
 import { doc, getDoc, updateDoc, addDoc, collection } from 'firebase/firestore';
 import { db } from '../firebase';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -61,9 +63,17 @@ const CustomMenu = (props) => {
   );
 };
 
+// --- CUSTOM SCHEMA ---
+const schema = BlockNoteSchema.create({
+  blockSpecs: {
+    ...defaultBlockSpecs,
+    mermaid: MermaidBlock(),
+  },
+});
+
 // --- 1. THE ACTUAL EDITOR ---
 function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, links, onAddLink, onRemoveLink, user }) {
-  const editor = useCreateBlockNote({ initialContent });
+  const editor = useCreateBlockNote({ schema, initialContent });
   const debounceTimer = useRef(null);
   const nodesRef = useRef(nodes);
   const linksRef = useRef(links);
@@ -188,15 +198,35 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
       const promptText = `You are an AI co-pilot inside a high-fidelity Zettelkasten note-taking app. 
       Here is the current document's context:\n"${allText}"\n\n
       The user wants you to do the following: "${query}"
-      Respond using rich Markdown formatting (headings, bullet points, bold text, and code blocks) to perfectly structure your answer.`;
+      Respond using rich Markdown formatting (headings, bullet points, bold text, and code blocks). 
+      CRITICAL INSTRUCTION: If the user asks for a diagram, flowchart, graph, or visual representation, you MUST ALWAYS generate it using valid Mermaid.js syntax inside a \`\`\`mermaid code block. Do NOT use backslashes for line breaks. ALWAYS wrap node labels in double quotes (e.g., A["Label with spaces and (special) chars"] ) to prevent syntax errors.`;
 
       const result = await model.generateContent(promptText);
       const response = await result.response;
       const text = response.text();
 
-      const parsedBlocks = await editor.tryParseMarkdownToBlocks(text);
-      editor.replaceBlocks([currentBlock], parsedBlocks);
+      // Intercept Mermaid blocks and inject them as our custom React blocks
+      let finalBlocks = [];
+      const parts = text.split(/(```mermaid\n[\s\S]*?\n```)/g);
+      
+      for (const part of parts) {
+        if (part.startsWith('```mermaid')) {
+          let code = part.replace(/^```mermaid\n/, '').replace(/\n```$/, '');
+          finalBlocks.push({
+            type: "mermaid",
+            props: { code: code.trim() }
+          });
+        } else if (part.trim()) {
+          const blocks = await editor.tryParseMarkdownToBlocks(part);
+          finalBlocks = finalBlocks.concat(blocks);
+        }
+      }
 
+      if (finalBlocks.length === 0) {
+        finalBlocks = [{ type: "paragraph", content: text }];
+      }
+
+      editor.replaceBlocks([currentBlock], finalBlocks);
       handleEditorChange();
 
     } catch (error) {
@@ -217,6 +247,24 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
     aliases: ["ai", "copilot", "gemini", "generate"],
     group: "Neural Tools", 
     icon: <span style={{ fontSize: '14px' }}>✨</span>,
+  });
+
+  const insertMermaid = (editor) => ({
+    title: "Mermaid Diagram",
+    onItemClick: () => {
+      editor.insertBlocks(
+        [
+          {
+            type: "mermaid",
+          },
+        ],
+        editor.getTextCursorPosition().block,
+        "after"
+      );
+    },
+    aliases: ["mermaid", "diagram", "chart"],
+    group: "Advanced Tools", 
+    icon: <span style={{ fontSize: '14px' }}>📊</span>,
   });
 
   const getMentionItems = async (query) => {
@@ -284,7 +332,7 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
         <SuggestionMenuController
           triggerCharacter={"/"}
           getItems={async (query) =>
-            filterSuggestionItems([...getDefaultReactSlashMenuItems(editor), insertAIAssistant(editor)], query)
+            filterSuggestionItems([...getDefaultReactSlashMenuItems(editor), insertAIAssistant(editor), insertMermaid(editor)], query)
           }
           suggestionMenuComponent={CustomMenu}
         />
