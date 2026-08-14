@@ -193,7 +193,7 @@ html, body {
   text-transform: uppercase; letter-spacing: 2px;
   cursor: pointer; transition: all 0.3s ease;
 }
-.nav-btn:hover { background: #fff; color: #000; }
+.nav-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
 
 /* The Hero */
 .editorial-hero {
@@ -571,20 +571,90 @@ html, body {
   box-sizing: border-box;
 }
 
+.dashboard-panel-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  perspective: 1200px; /* Enable 3D space */
+}
+
 .dashboard-panel {
   position: relative;
   padding: 3rem;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  overflow: hidden;
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.6s ease, border 0.6s ease, background 0.6s ease, border-radius 0.6s ease;
+  overflow: hidden; 
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+  background: rgba(15, 15, 20, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 12px;
+  z-index: 1;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: translateZ(0) rotateX(0) rotateY(0);
 }
 
-.dashboard-panel:hover {
-  border: 1px solid rgba(207, 168, 97, 0.15);
-  box-shadow: 0 0 30px rgba(207, 168, 97, 0.03);
+/* The Mesh Gradient hidden inside by default */
+.dashboard-panel::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%; right: -50%; bottom: -50%;
+  background: 
+    radial-gradient(ellipse at 40% 40%, rgba(207, 168, 97, 0.8) 0%, transparent 40%),
+    radial-gradient(ellipse at 70% 30%, rgba(220, 150, 50, 0.6) 0%, transparent 40%),
+    radial-gradient(ellipse at 30% 70%, rgba(150, 100, 30, 0.5) 0%, transparent 40%);
+  filter: blur(50px);
+  opacity: 0;
+  transition: all 0.6s ease;
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* Hover State - 3D Pop Out & Glow */
+.dashboard-panel-container:hover .dashboard-panel {
+  
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  
+  box-shadow: 
+    20px 30px 50px rgba(0, 0, 0, 0.8),
+    -10px -10px 30px rgba(207, 168, 97, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+    inset 0 0 30px rgba(207, 168, 97, 0.4),
+    inset 10px 20px 40px -10px rgba(255, 255, 255, 0.3);
+    
+  background: transparent;
+}
+
+/* Reveal Mesh Gradient */
+.dashboard-panel-container:hover .dashboard-panel::before {
+  opacity: 1;
+  transform: scale(1.2) rotate(15deg);
+}
+
+/* Add the sweeping glare to enhance the 3D glass feel */
+.dashboard-panel::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 40%; height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: skewX(-25deg);
+  transition: none;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.dashboard-panel-container:hover .dashboard-panel::after {
+  animation: glass-sweep 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes glass-sweep {
+  0% { left: -100%; }
+  100% { left: 200%; }
 }
 
 .dashboard-panel-number {
@@ -916,13 +986,536 @@ html, body {
     margin-bottom: -1rem !important;
   }
   .glass-visual-container {
-    grid-column: 1 / -1 !important;
-    height: 250px !important;
+/* =========================================
+   GAMIFICATION: COGNITIVE LEVEL BAR
+   ========================================= */
+.xp-container {
+  padding: 0 1.5rem 1rem 1.5rem;
+  border-bottom: 1px solid #1a1a1a;
+  margin-bottom: 1rem;
+}
+
+.xp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 6px;
+}
+
+.xp-title {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: #888;
+  letter-spacing: 1px;
+}
+
+.xp-level {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  color: var(--accent);
+  line-height: 1;
+  font-style: italic;
+}
+
+.xp-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.xp-fill {
+  height: 100%;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(207, 168, 97, 0.5);
+  transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* =========================================
+   BLOCKNOTE NOTION-STYLE OVERRIDES
+   ========================================= */
+.notion-editor-wrapper {
+  --bn-colors-editor-background: transparent !important; 
+}
+
+.notion-editor-wrapper .bn-container,
+.notion-editor-wrapper .bn-editor,
+.notion-editor-wrapper .mantine-Paper-root {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.notion-editor-wrapper .bn-block-content {
+  font-family: var(--font-sans) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  line-height: 1.7 !important;
+}
+
+.notion-editor-wrapper .bn-block-content[data-is-empty-and-focused]::before {
+  color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* =========================================
+   CUSTOM CYBERPUNK SLASH MENU
+   ========================================= */
+.cyber-slash-menu-wrapper {
+  background: rgba(10, 10, 15, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  max-height: 300px;
+  overflow-y: auto;
+  min-width: 220px;
+  z-index: 99999;
+}
+
+.cyber-slash-menu-item {
+  padding: 8px 12px;
+  background: transparent;
+  color: #ccc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 4px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  transition: all 0.1s ease;
+}
+
+.cyber-slash-menu-item:hover, 
+.cyber-slash-menu-item.selected {
+  background: var(--accent);
+  color: #000;
+  font-weight: 500;
+}
+
+/* Elegant scrollbar for the menu */
+.cyber-slash-menu-wrapper::-webkit-scrollbar {
+  width: 4px;
+}
+.cyber-slash-menu-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cyber-slash-menu-wrapper::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+.cta-section {
+  padding: 8rem 5vw 10rem 5vw;
+  text-align: center;
+  position: relative;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+/* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
   }
-  .dashboard-panel {
-    padding: 1.5rem !important;
+  .hero-title {
+    font-size: 3.5rem !important;
+    line-height: 1.1;
+  }
+  .responsive-h2 {
+    font-size: 3rem !important;
+  }
+  .responsive-h2-sm {
+    font-size: 2.5rem !important;
+  }
+  .responsive-h2-lg {
+    font-size: 4rem !important;
+  }
+  .panel-grid-section, .workflow-section {
+    padding: 3rem 5vw !important;
+  }
+  .cta-section {
+    padding: 5rem 5vw 6rem 5vw !important;
+  }
+  .section-header-wrap {
+    text-align: left !important;
+  }
+  .section-header-wrap span.cyber-header {
+    justify-content: flex-start !important;
+  }
+  .section-text {
+    max-width: 100% !important;
+  }
+  .section-text-bordered {
+    border-left: none !important;
+    padding-left: 0 !important;
+    border-top: 1px solid var(--accent);
+    padding-top: 1rem;
+    margin-top: 1rem;
+  }
+  .section-text-bordered-right {
+    border-right: none !important;
+    padding-right: 0 !important;
+    border-top: 1px solid var(--accent);
+    padding-top: 1rem;
+    margin-top: 1rem;
+  }
+  .panel-row {
+    grid-template-columns: 1fr !important;
+  }
+  .panel-span-2 {
+    grid-column: 1 / 2 !important;
+  }
+  .workflow-step {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+}
+  .workflow-num {
+    margin-right: 0 !important;
+    margin-bottom: -1rem !important;
+  }
+  .glass-visual-container {
+/* =========================================
+   GAMIFICATION: COGNITIVE LEVEL BAR
+   ========================================= */
+.xp-container {
+  padding: 0 1.5rem 1rem 1.5rem;
+  border-bottom: 1px solid #1a1a1a;
+  margin-bottom: 1rem;
+}
+
+.xp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 6px;
+}
+
+.xp-title {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: #888;
+  letter-spacing: 1px;
+}
+
+.xp-level {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  color: var(--accent);
+  line-height: 1;
+  font-style: italic;
+}
+
+.xp-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.xp-fill {
+  height: 100%;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(207, 168, 97, 0.5);
+  transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* =========================================
+   BLOCKNOTE NOTION-STYLE OVERRIDES
+   ========================================= */
+.notion-editor-wrapper {
+  --bn-colors-editor-background: transparent !important; 
+}
+
+.notion-editor-wrapper .bn-container,
+.notion-editor-wrapper .bn-editor,
+.notion-editor-wrapper .mantine-Paper-root {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.notion-editor-wrapper .bn-block-content {
+  font-family: var(--font-sans) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  line-height: 1.7 !important;
+}
+
+.notion-editor-wrapper .bn-block-content[data-is-empty-and-focused]::before {
+  color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* =========================================
+   CUSTOM CYBERPUNK SLASH MENU
+   ========================================= */
+.cyber-slash-menu-wrapper {
+  background: rgba(10, 10, 15, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  max-height: 300px;
+  overflow-y: auto;
+  min-width: 220px;
+  z-index: 99999;
+}
+
+.cyber-slash-menu-item {
+  padding: 8px 12px;
+  background: transparent;
+  color: #ccc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 4px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  transition: all 0.1s ease;
+}
+
+.cyber-slash-menu-item:hover, 
+.cyber-slash-menu-item.selected {
+  background: var(--accent);
+  color: #000;
+  font-weight: 500;
+}
+
+/* Elegant scrollbar for the menu */
+.cyber-slash-menu-wrapper::-webkit-scrollbar {
+  width: 4px;
+}
+.cyber-slash-menu-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cyber-slash-menu-wrapper::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+.cta-section {
+  padding: 8rem 5vw 10rem 5vw;
+  text-align: center;
+  position: relative;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+/* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 768px) {
+  body, html {
+    overflow-x: hidden;
+  }
+  .hide-on-mobile {
+    display: none !important;
   }
   .editorial-nav {
-    padding: 1.5rem 5vw;
+    padding: 1rem 5vw !important;
   }
+  .nav-logo span {
+    font-size: 0.9rem !important;
+    letter-spacing: 1px !important;
+  }
+  .nav-actions {
+    gap: 0.75rem !important;
+  }
+  .nav-btn {
+    padding: 0.4rem 1rem !important;
+    font-size: 0.8rem !important;
+  }
+  .ticker-marquee {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+  .hero-title {
+    font-size: 3.5rem !important;
+    line-height: 1.1;
+  }
+  .responsive-h2 {
+    font-size: 3rem !important;
+  }
+  .responsive-h2-sm {
+    font-size: 2.5rem !important;
+  }
+  .responsive-h2-lg {
+    font-size: 4rem !important;
+  }
+  .panel-grid-section, .workflow-section {
+    padding: 3rem 5vw !important;
+  }
+  .panel-grid-section {
+    grid-template-columns: 1fr !important;
+    gap: 3rem !important;
+  }
+  .cta-section {
+    padding: 5rem 5vw 6rem 5vw !important;
+  }
+  .section-header-wrap {
+    text-align: left !important;
+  }
+  .section-header-wrap span.cyber-header {
+    justify-content: flex-start !important;
+  }
+  .section-text {
+    max-width: 100% !important;
+  }
+  .section-text-bordered {
+    border-left: none !important;
+    padding-left: 0 !important;
+    border-top: 1px solid var(--accent);
+    padding-top: 1rem;
+    margin-top: 1rem;
+  }
+  .section-text-bordered-right {
+    border-right: none !important;
+    padding-right: 0 !important;
+    border-top: 1px solid var(--accent);
+    padding-top: 1rem;
+    margin-top: 1rem;
+  }
+  .panel-row {
+    grid-template-columns: 1fr !important;
+  }
+  .panel-span-2 {
+    grid-column: 1 / 2 !important;
+  }
+  .workflow-step {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+  .workflow-step-title {
+    font-size: 2rem !important;
+  }
+  .workflow-step-text {
+    max-width: 100% !important;
+    font-size: 0.95rem !important;
+  }
+  .responsive-glass-container {
+    height: auto !important;
+    min-height: 300px !important;
+  }
+  .responsive-glass-container > div:last-child {
+    width: 100% !important;
+  }
+  .responsive-card-content {
+    word-break: break-word !important;
+    white-space: normal !important;
+    padding: 1rem !important;
+    width: 100% !important;
+  }
+  .long-text-wrap {
+    overflow-wrap: break-word !important;
+  }
+  .pure-css-diagram-container {
+    overflow-x: auto !important;
+    justify-content: flex-start !important;
+    padding-bottom: 1.5rem !important;
+  }
+  .pure-css-diagram-container > div {
+    transform-origin: left center !important;
+  }
+  .hero-content-row {
+    flex-direction: column !important;
+    gap: 2rem !important;
+    text-align: center !important;
+  }
+  .hero-content-row > div {
+    width: 100% !important;
+  }
+  .neural-network-visual {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 300px;
+    margin-top: 2rem;
+  }
+  .neural-network-visual img {
+    width: 100% !important;
+    height: auto !important;
+  }
+  .neural-network-visual svg {
+    width: 100% !important;
+    height: auto !important;
+  }
+}
+
+/* Fast transition for mouse tracking on hover */
+.dashboard-panel-container:hover .dashboard-panel {
+  transition: transform 0.1s ease-out, box-shadow 0.6s ease, border 0.6s ease, background 0.6s ease, border-radius 0.6s ease;
+}
+
+/* ✦ GOLD SCROLLING TICKER MARQUEE */
+.ticker-marquee {
+  width: 100vw;
+  margin-left: -5vw;
+  overflow: hidden;
+  background: var(--surface);
+  border-top: 1px solid rgba(207, 168, 97, 0.2);
+  border-bottom: 1px solid rgba(207, 168, 97, 0.2);
+  padding: 1.5rem 0;
+  display: flex;
+  white-space: nowrap;
+}
+
+.ticker-content {
+  display: flex;
+  animation: scroll-left 40s linear infinite;
+}
+
+.ticker-item {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0 3rem;
+  position: relative;
+}
+
+/* Add bullet separators between ticker items */
+.ticker-item::after {
+  content: '•';
+  position: absolute;
+  right: 0;
+  color: rgba(207, 168, 97, 0.3);
+}
+
+@keyframes scroll-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* PRIMARY CTA BUTTON */
+.primary-cta-btn {
+  background: var(--text-primary);
+  color: var(--bg);
+  padding: 1rem 2.5rem;
+  border-radius: 100px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px 0 rgba(255, 255, 255, 0.1);
+}
+
+.primary-cta-btn:hover {
+  background: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(207, 168, 97, 0.2);
 }

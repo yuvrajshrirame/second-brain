@@ -1,4 +1,41 @@
-import React from 'react';
+import React, { useRef } from 'react';
+
+const TiltCard = ({ children, className = '', containerStyle = {}, cardStyle = {} }) => {
+  const cardRef = useRef(null);
+
+  const handleMouseMove = (e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    const rotateX = ((y - centerY) / centerY) * -15; 
+    const rotateY = ((x - centerX) / centerX) * 15;
+    
+    cardRef.current.style.transform = `translateY(-10px) translateZ(40px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+  };
+
+  const handleMouseLeave = () => {
+    if (!cardRef.current) return;
+    cardRef.current.style.transform = `translateY(0) translateZ(0) rotateX(0) rotateY(0)`;
+  };
+
+  return (
+    <div 
+      className={`dashboard-panel-container ${className}`} 
+      style={containerStyle}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      <div className="dashboard-panel" ref={cardRef} style={cardStyle}>
+        {children}
+      </div>
+    </div>
+  );
+};
 
 // Common Inline Icon Component
 const Icon = ({ path }) => (
@@ -20,11 +57,11 @@ function LandingPage({ onEnter }) {
       
       {/* 0. GLASS NAVIGATION */}
       <nav className="editorial-nav">
-        <div className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <img src="/puzzle.png" alt="logo" style={{ width: '22px', height: '22px' }} />
-          <span><span style={{ color: 'var(--accent)'}}>2nd</span>Brain</span>
+        <div className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img src="/puzzle.png" alt="logo" style={{ width: '20px', height: '20px', opacity: 0.9 }} />
+          <span style={{ fontWeight: 800, color: '#fff', fontSize: '1rem', letterSpacing: '2px', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>2NDBRAIN</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+        <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
           <a 
             href="https://docs.uraj.dev/2ndbrain" 
             target="_blank" 
@@ -40,20 +77,100 @@ function LandingPage({ onEnter }) {
           >
             Explore Docs
           </a>
-          <button className="nav-btn" onClick={onEnter}>Initialize</button>
+          <button className="nav-btn" onClick={onEnter}>INIT</button>
         </div>
       </nav>
 
       {/* 1. THE REFINED HERO SECTION */}
       <header className="editorial-hero">
-        <h1 className="hero-title animate-fade-up">
-          Architect the <br/>
-          <em>architecture</em> <br/>
-          of your mind.
-        </h1>
-        <p className="hero-subtitle animate-fade-up animate-delay-1">
-          Move beyond linear folders. A high-fidelity workspace designed for developers who deal in <em>networks</em>, not lists.
-        </p>
+        <div className="hero-content-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '4rem', marginTop: '5vh' }}>
+          
+          <div style={{ flex: 1, zIndex: 10 }}>
+            <h1 className="hero-title animate-fade-up" style={{ margin: '0 0 1.5rem 0', fontSize: '4.2rem', lineHeight: '1.05' }}>
+              Architect the <em>architecture</em> <br/>
+              of your mind.
+            </h1>
+            <p className="hero-subtitle animate-fade-up animate-delay-1" style={{ maxWidth: '85%' }}>
+              Move beyond linear folders. A high-fidelity workspace designed for developers who deal in <em>networks</em>, not lists.
+            </p>
+          </div>
+
+          <div className="neural-network-visual animate-fade-up animate-delay-2 hide-on-mobile" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', width: '100%', maxWidth: '550px', aspectRatio: '1/1', perspective: '1200px', transformStyle: 'preserve-3d' }}>
+            {/* Ambient Background Glow */}
+            <div style={{ position: 'absolute', width: '400px', height: '400px', filter: 'blur(100px)', opacity: 0.3, background: 'radial-gradient(circle, rgba(207,168,97,0.5) 0%, transparent 70%)', transform: 'translateZ(-100px)' }}></div>
+            
+            {/* 3D Glass Brain Image - Static */}
+            <img 
+              src="/hero-brain.jpg" 
+              alt="3D Glass Brain" 
+              style={{ 
+                position: 'absolute', 
+                width: '65%', 
+                height: '65%', 
+                objectFit: 'contain',
+                mixBlendMode: 'screen',
+                WebkitMaskImage: 'radial-gradient(circle at center, black 55%, transparent 70%)',
+                maskImage: 'radial-gradient(circle at center, black 55%, transparent 70%)',
+                transform: 'translateZ(0)'
+              }} 
+            />
+            
+            {/* React-like 3D Orbits */}
+            <div className="react-orbit" style={{ '--ry': '0deg', '--dur': '8s' }}>
+              <div className="electron" style={{ '--hide-delay': '0s' }}></div>
+            </div>
+            <div className="react-orbit" style={{ '--ry': '60deg', '--dur': '12s' }}>
+              <div className="electron" style={{ background: 'var(--accent)', '--hide-delay': 'calc(var(--dur) * -0.83)' }}></div>
+            </div>
+            <div className="react-orbit" style={{ '--ry': '120deg', '--dur': '10s' }}>
+              <div className="electron" style={{ '--hide-delay': 'calc(var(--dur) * -0.67)' }}></div>
+            </div>
+
+            <style>
+              {`
+                .react-orbit {
+                  position: absolute;
+                  top: 0; left: 0; right: 0; bottom: 0;
+                  margin: auto;
+                  width: 90%; height: 90%;
+                  border: 1px solid rgba(207, 168, 97, 0.15);
+                  border-radius: 50%;
+                  transform-style: preserve-3d;
+                  animation: spin-orbit var(--dur) linear infinite;
+                }
+
+                @keyframes spin-orbit {
+                  0% { transform: rotateY(var(--ry)) rotateX(75deg) rotateZ(0deg); }
+                  100% { transform: rotateY(var(--ry)) rotateX(75deg) rotateZ(360deg); }
+                }
+
+                .electron {
+                  position: absolute;
+                  top: -6px; left: calc(50% - 6px);
+                  width: 12px; height: 12px;
+                  background: #fff;
+                  border-radius: 50%;
+                  box-shadow: 0 0 20px 8px rgba(207, 168, 97, 0.8);
+                  animation: 
+                    counter-spin var(--dur) linear infinite,
+                    fade-electron var(--dur) linear infinite var(--hide-delay);
+                }
+
+                @keyframes counter-spin {
+                  0% { transform: rotateZ(0deg) rotateX(-75deg) rotateY(calc(-1 * var(--ry))); }
+                  100% { transform: rotateZ(-360deg) rotateX(-75deg) rotateY(calc(-1 * var(--ry))); }
+                }
+
+                @keyframes fade-electron {
+                  0% { opacity: 0; }
+                  20% { opacity: 1; }
+                  80% { opacity: 1; }
+                  100% { opacity: 0; }
+                }
+              `}
+            </style>
+          </div>
+        </div>
       </header>
 
       {/* ✦ NEW: GOLD SCROLLING TICKER MARQUEE */}
@@ -82,18 +199,18 @@ function LandingPage({ onEnter }) {
         </div>
         
         {/* Visual Panel */}
-        <div className="glass-visual-container" style={{ margin: 0, height: '400px' }}>
+        <div className="glass-visual-container responsive-glass-container" style={{ margin: 0, height: '400px' }}>
           <div className="glow-back" style={{ top: '60%', left: '70%', background: 'radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 60%)' }}></div>
-          <div className="dashboard-panel" style={{ position: 'relative', width: '90%', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-             <div style={{ color: 'var(--accent)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <TiltCard containerStyle={{ width: '90%' }} cardStyle={{ position: 'relative', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+             <div className="responsive-card-content" style={{ color: 'var(--accent)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                <div>[[ System Architecture ]]</div>
                <div>↪ linked to: [[ Database Schema ]]</div>
                <div>↪ referenced by: 3 unlinked mentions</div>
-               <div style={{ opacity: 0.2, marginTop: '2rem' }}>[ Current Project ] ----------→ [ Bug Fixes ]</div>
+               <div className="long-text-wrap" style={{ opacity: 0.2, marginTop: '2rem' }}>[ Current Project ] ----------→ [ Bug Fixes ]</div>
                <div style={{ opacity: 0.1 }}> ↓ </div>
                <div style={{ opacity: 0.05 }}> [ Meeting Notes ] </div>
              </div>
-          </div>
+          </TiltCard>
         </div>
       </section>
 
@@ -110,15 +227,30 @@ function LandingPage({ onEnter }) {
         </div>
         
         {/* Visual Panel */}
-        <div className="glass-visual-container" style={{ margin: 0, height: '400px', gridColumn: '1 / 2' }}>
+        <div className="glass-visual-container responsive-glass-container" style={{ margin: 0, height: '400px', gridColumn: '1 / 2' }}>
           <div className="glow-back" style={{ top: '30%', left: '20%', background: 'radial-gradient(circle at center, rgba(207, 168, 97, 0.1) 0%, transparent 60%)' }}></div>
-          <div className="dashboard-panel" style={{ position: 'relative', width: '90%', height: '300px', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '3rem' }}>
-            <div style={{ height: '2px', width: '30%', background: 'rgba(255,255,255,0.2)' }}></div>
-            <div style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', margin: '1rem 0' }}>$ /generate diagram for authentication flow</div>
-            <div style={{ height: '12px', width: '80%', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}></div>
-            <div style={{ height: '12px', width: '60%', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}></div>
-            <div style={{ height: '24px', width: '40%', background: 'rgba(207,168,97,0.1)', border: '1px solid rgba(207,168,97,0.3)', marginTop: 'auto' }}></div>
-          </div>
+          <TiltCard containerStyle={{ width: '90%' }} cardStyle={{ position: 'relative', height: '300px', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '2rem' }}>
+            <div className="responsive-card-content" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>$ /generate diagram for authentication flow</div>
+            
+            {/* Pure CSS Diagram */}
+            <div className="pure-css-diagram-container" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', marginTop: '1rem', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', transform: 'scale(0.85)' }}>
+                <div style={{ padding: '0.8rem 1.2rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', fontSize: '0.75rem', color: '#ccc', fontFamily: 'var(--font-mono)' }}>[Client]</div>
+                <div style={{ color: 'rgba(255,255,255,0.2)' }}>→</div>
+                <div style={{ padding: '0.8rem 1.2rem', background: 'rgba(207,168,97,0.05)', border: '1px solid var(--accent)', borderRadius: '6px', fontSize: '0.75rem', color: 'var(--accent)', fontFamily: 'var(--font-mono)', boxShadow: '0 0 15px rgba(207,168,97,0.1)' }}>[Auth API]</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                     <div style={{ color: 'rgba(255,255,255,0.2)' }}>↗</div>
+                     <div style={{ padding: '0.8rem 1.2rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', fontSize: '0.75rem', color: '#ccc', fontFamily: 'var(--font-mono)' }}>[Database]</div>
+                   </div>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                     <div style={{ color: 'rgba(255,255,255,0.2)' }}>↘</div>
+                     <div style={{ padding: '0.8rem 1.2rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', fontSize: '0.75rem', color: '#ccc', fontFamily: 'var(--font-mono)' }}>[App State]</div>
+                   </div>
+                </div>
+              </div>
+            </div>
+          </TiltCard>
         </div>
       </section>
 
@@ -135,29 +267,29 @@ function LandingPage({ onEnter }) {
         {/* Triple Panel Layout */}
         <div className="panel-row">
           
-          <div className="dashboard-panel">
+          <TiltCard>
             <span className="dashboard-panel-number">01</span>
             <h3 className="dashboard-panel-title">Visual <em>Mind Maps</em></h3>
             <p className="dashboard-panel-text">
               Ideas don't exist in a vacuum. Every note is automatically woven into a visual web of links, giving you a bird's-eye view of your entire project landscape.
             </p>
-          </div>
+          </TiltCard>
 
-          <div className="dashboard-panel">
+          <TiltCard>
             <span className="dashboard-panel-number">02</span>
             <h3 className="dashboard-panel-title">Block-Based <em>Editor</em></h3>
             <p className="dashboard-panel-text">
               A professional block-editor that gets out of your way. Summon powerful formatting, write native code, and weave links—all without ever touching your mouse.
             </p>
-          </div>
+          </TiltCard>
 
-          <div className="dashboard-panel panel-span-2">
+          <TiltCard className="panel-span-2">
             <span className="dashboard-panel-number">03</span>
             <h3 className="dashboard-panel-title">Smart <em>Auto-Linking</em></h3>
             <p className="dashboard-panel-text">
               Type naturally. The editor scans your text in real-time and subtly suggests connections to existing notes, turning fleeting thoughts into highly-linkable concepts.
             </p>
-          </div>
+          </TiltCard>
 
         </div>
       </section>
