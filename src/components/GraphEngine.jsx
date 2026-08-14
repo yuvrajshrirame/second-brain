@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useMemo } from 'react';
 
 function GraphEngine({ data, selectedNodeId, onNodeClick }) {
   const canvasRef = useRef(null);
+  const physicsStateRef = useRef(new Map());
 
   // --- 1. FILTER DATA (The Local Orbit Logic) ---
   const localData = useMemo(() => {
@@ -33,18 +34,22 @@ function GraphEngine({ data, selectedNodeId, onNodeClick }) {
     const height = canvas.height;
 
     // Initialize node physics state with organic floating parameters
-    let simulationNodes = localData.nodes.map(n => ({
-      ...n,
-      x: Math.random() * width,  
-      y: Math.random() * height,
-      vx: 0, vy: 0,
-      isCenter: String(n.id) === String(selectedNodeId),
-      // FLOATING MATH: Random offsets so they don't all move in unison
-      floatPhaseX: Math.random() * Math.PI * 2,
-      floatPhaseY: Math.random() * Math.PI * 2,
-      floatSpeedX: 0.5 + Math.random() * 0.8, 
-      floatSpeedY: 0.5 + Math.random() * 0.8
-    }));
+    let simulationNodes = localData.nodes.map(n => {
+      const prev = physicsStateRef.current.get(n.id);
+      return {
+        ...n,
+        x: prev ? prev.x : Math.random() * width,  
+        y: prev ? prev.y : Math.random() * height,
+        vx: prev ? prev.vx : 0, 
+        vy: prev ? prev.vy : 0,
+        isCenter: String(n.id) === String(selectedNodeId),
+        // FLOATING MATH: Random offsets so they don't all move in unison
+        floatPhaseX: prev ? prev.floatPhaseX : Math.random() * Math.PI * 2,
+        floatPhaseY: prev ? prev.floatPhaseY : Math.random() * Math.PI * 2,
+        floatSpeedX: prev ? prev.floatSpeedX : 0.5 + Math.random() * 0.8, 
+        floatSpeedY: prev ? prev.floatSpeedY : 0.5 + Math.random() * 0.8
+      };
+    });
 
     let animationFrameId;
 
@@ -138,6 +143,13 @@ function GraphEngine({ data, selectedNodeId, onNodeClick }) {
         node.y += node.vy;
         node.vx *= DAMPING;
         node.vy *= DAMPING;
+
+        // Persist the state so it doesn't scramble on re-renders
+        physicsStateRef.current.set(node.id, {
+          x: node.x, y: node.y, vx: node.vx, vy: node.vy,
+          floatPhaseX: node.floatPhaseX, floatPhaseY: node.floatPhaseY,
+          floatSpeedX: node.floatSpeedX, floatSpeedY: node.floatSpeedY
+        });
 
         // Draw Circle
         ctx.beginPath();

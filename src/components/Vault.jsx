@@ -666,7 +666,7 @@ function Vault({ user }) {
             <span style={{ color: '#4ade80' }}>[ONLINE]</span>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <GraphEngine data={graphData} selectedNodeId={selectedNodeId} onNodeClick={(id) => setSelectedNodeId(id)} />
+            <GraphEngine data={graphData} selectedNodeId={selectedNodeId} onNodeClick={setSelectedNodeId} />
           </div>
         </div>
 
