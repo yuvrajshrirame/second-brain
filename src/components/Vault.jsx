@@ -52,6 +52,17 @@ function Vault({ user }) {
     onConfirm: null
   });
 
+  // --- GLOBAL TOOLTIP STATE ---
+  const [tooltip, setTooltip] = useState({ visible: false, text: '', x: 0, y: 0 });
+
+  const showTooltip = (e, text) => {
+    if (!isSidebarCollapsed) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTooltip({ visible: true, text, x: rect.right + 12, y: rect.top + rect.height / 2 });
+  };
+  
+  const hideTooltip = () => setTooltip({ visible: false, text: '', x: 0, y: 0 });
+
   // --- GLOBAL CLICK HANDLER ---
   useEffect(() => {
     const handleClickOutside = () => setOpenFolderMenuId(null);
@@ -332,8 +343,14 @@ function Vault({ user }) {
       </AnimatePresence>
 
       <div className={`vault-left-col ${isSidebarCollapsed ? 'collapsed' : ''}`}>
-        <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: 0 }}>
+        <div style={{ 
+          padding: isSidebarCollapsed ? '1.5rem 0' : '1.5rem', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
+          gap: '12px' 
+        }}>
+          <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: 0, display: 'flex' }}>
             <Icon path="M3 12h18M3 6h18M3 18h18" /> 
           </button>
           <h2 className="nav-text" style={{ fontSize: '1rem', fontWeight: '500', margin: 0 }}>Vault</h2>
@@ -352,12 +369,24 @@ function Vault({ user }) {
         )}
 
         <div style={{ flex: 1, paddingTop: '1rem', overflowY: 'auto' }} className="editor-scroll-area">
-          <div className="vault-nav-item" onClick={handleCreateNode}>
+          <div 
+            className="vault-nav-item" 
+            onClick={handleCreateNode} 
+            data-tooltip="New Node"
+            onMouseEnter={(e) => showTooltip(e, 'New Node')}
+            onMouseLeave={hideTooltip}
+          >
             <Icon path="M12 5v14M5 12h14" />
             <span className="nav-text" style={{ color: 'var(--accent)' }}>New Node</span>
           </div>
           
-          <div className="cyber-header" style={{ padding: '1rem 1.5rem 0.5rem', margin: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="cyber-header" style={{ 
+            padding: '1rem 1.5rem 0.5rem', 
+            margin: 0, 
+            display: isSidebarCollapsed ? 'none' : 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center' 
+          }}>
              <span className="nav-text">DIRECTORY</span>
              {!isSidebarCollapsed && (
                <button 
@@ -373,7 +402,14 @@ function Vault({ user }) {
              )}
           </div>
           
-          <div className="vault-nav-item" onClick={() => setActiveFolder('all')} style={{ borderLeft: activeFolder === 'all' ? '2px solid var(--accent)' : '2px solid transparent', background: activeFolder === 'all' ? 'rgba(255,255,255,0.03)' : 'transparent' }}>
+          <div 
+            className="vault-nav-item" 
+            onClick={() => setActiveFolder('all')} 
+            data-tooltip="All Nodes" 
+            onMouseEnter={(e) => showTooltip(e, 'All Nodes')}
+            onMouseLeave={hideTooltip}
+            style={{ borderLeft: activeFolder === 'all' ? '2px solid var(--accent)' : '2px solid transparent', background: activeFolder === 'all' ? 'rgba(255,255,255,0.03)' : 'transparent' }}
+          >
             <Icon path="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6z" />
             <span className="nav-text" style={{ color: activeFolder === 'all' ? '#fff' : '#888' }}>All Nodes</span>
           </div>
@@ -388,18 +424,20 @@ function Vault({ user }) {
                 transition={{ duration: 0.2 }}
                 className="vault-nav-item" 
                 onClick={() => setActiveFolder(folder.id)} 
+                data-tooltip={folder.name}
+                onMouseEnter={(e) => showTooltip(e, folder.name)}
+                onMouseLeave={hideTooltip}
                 style={{ 
                   borderLeft: activeFolder === folder.id ? '2px solid var(--accent)' : '2px solid transparent', 
                   background: activeFolder === folder.id ? 'rgba(255,255,255,0.03)' : 'transparent',
-                  display: 'flex', justifyContent: 'space-between', paddingRight: '1rem', 
                   position: 'relative', 
                   zIndex: openFolderMenuId === folder.id ? 10 : 1, 
                   overflow: openFolderMenuId === folder.id ? 'visible' : 'hidden' 
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-                  <Icon path="M20 21H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2z" />
-                  
+                <Icon path="M20 21H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2z" />
+                
+                <div className="nav-text" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, overflow: 'hidden' }}>
                   {editingFolderId === folder.id ? (
                     <input
                       autoFocus
@@ -411,27 +449,25 @@ function Vault({ user }) {
                       style={{ background: 'transparent', border: 'none', borderBottom: '1px solid var(--accent)', color: '#fff', outline: 'none', width: '100%', fontSize: '0.9rem', fontFamily: 'var(--font-sans)' }}
                     />
                   ) : (
-                    <span className="nav-text" style={{ color: activeFolder === folder.id ? '#fff' : '#888' }}>{folder.name}</span>
+                    <span style={{ color: activeFolder === folder.id ? '#fff' : '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{folder.name}</span>
                   )}
-                </div>
-                
-                {!isSidebarCollapsed && (
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                  
+                  {!isSidebarCollapsed && (
                     <button 
                       onClick={(e) => { 
                         e.stopPropagation(); 
                         setOpenFolderMenuId(openFolderMenuId === folder.id ? null : folder.id); 
                       }} 
-                      style={{ background: 'transparent', border: 'none', color: openFolderMenuId === folder.id ? '#fff' : '#666', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}
+                      style={{ background: 'transparent', border: 'none', color: openFolderMenuId === folder.id ? '#fff' : '#666', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', transition: 'color 0.2s', flexShrink: 0 }}
                       title="Folder Options"
                     >
                       <EllipsisIcon />
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 <AnimatePresence>
-                  {openFolderMenuId === folder.id && (
+                  {openFolderMenuId === folder.id && !isSidebarCollapsed && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.95, y: -5 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -489,30 +525,32 @@ function Vault({ user }) {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 className="vault-nav-item"
-                style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingRight: '1.5rem', overflow: 'hidden' }}
+                style={{ display: 'flex', alignItems: 'center', paddingRight: '1.5rem', overflow: 'hidden' }}
               >
                 <Icon path="M20 21H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2z" />
-                <input
-                  autoFocus
-                  value={newFolderName}
-                  onChange={e => setNewFolderName(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') handleCreateFolder();
-                    if (e.key === 'Escape') {
-                      setIsAddingFolder(false);
-                      setNewFolderName("");
-                    }
-                  }}
-                  onBlur={() => {
-                    if (newFolderName.trim()) {
-                      handleCreateFolder();
-                    } else {
-                      setIsAddingFolder(false);
-                    }
-                  }}
-                  placeholder="Folder name..."
-                  style={{ background: 'transparent', border: 'none', borderBottom: '1px solid var(--accent)', color: '#fff', outline: 'none', width: '100%', fontSize: '0.9rem', fontFamily: 'var(--font-sans)' }}
-                />
+                <div className="nav-text" style={{ flex: 1, display: 'flex' }}>
+                  <input
+                    autoFocus
+                    value={newFolderName}
+                    onChange={e => setNewFolderName(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') handleCreateFolder();
+                      if (e.key === 'Escape') {
+                        setIsAddingFolder(false);
+                        setNewFolderName("");
+                      }
+                    }}
+                    onBlur={() => {
+                      if (newFolderName.trim()) {
+                        handleCreateFolder();
+                      } else {
+                        setIsAddingFolder(false);
+                      }
+                    }}
+                    placeholder="Folder name..."
+                    style={{ background: 'transparent', border: 'none', borderBottom: '1px solid var(--accent)', color: '#fff', outline: 'none', width: '100%', fontSize: '0.9rem', fontFamily: 'var(--font-sans)' }}
+                  />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -526,11 +564,21 @@ function Vault({ user }) {
             rel="noreferrer" 
             className="vault-nav-item" 
             style={{ textDecoration: 'none', color: 'inherit', display: 'flex' }}
+            data-tooltip="Documentation"
+            onMouseEnter={(e) => showTooltip(e, 'Documentation')}
+            onMouseLeave={hideTooltip}
           >
             <Icon path="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
             <span className="nav-text">Documentation</span>
           </a>
-          <div className="vault-nav-item" onClick={triggerSignOut} style={{ marginTop: '0.2rem' }}>
+          <div 
+            className="vault-nav-item" 
+            onClick={triggerSignOut} 
+            style={{ marginTop: '0.2rem' }} 
+            data-tooltip="Sign Out"
+            onMouseEnter={(e) => showTooltip(e, 'Sign Out')}
+            onMouseLeave={hideTooltip}
+          >
             <Icon path="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
             <span className="nav-text">Sign Out</span>
           </div>
@@ -654,6 +702,32 @@ function Vault({ user }) {
         </div>
 
       </div>
+      {/* --- GLOBAL FIXED TOOLTIP --- */}
+      {tooltip.visible && isSidebarCollapsed && (
+        <div style={{
+          position: 'fixed',
+          left: tooltip.x,
+          top: tooltip.y,
+          transform: 'translateY(-50%)',
+          background: 'rgba(10, 10, 15, 0.95)',
+          backdropFilter: 'blur(8px)',
+          color: 'var(--accent)',
+          padding: '6px 12px',
+          borderRadius: '6px',
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.7rem',
+          letterSpacing: '1px',
+          textTransform: 'uppercase',
+          whiteSpace: 'nowrap',
+          zIndex: 99999,
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.05)',
+          pointerEvents: 'none'
+        }}>
+          {tooltip.text}
+        </div>
+      )}
+
     </div>
   );
 }

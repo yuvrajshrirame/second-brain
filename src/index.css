@@ -344,7 +344,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 12px; /* Space between icon and text */
-  padding: 0.6rem 1.2rem;
+  padding: 0.6rem 1.5rem;
   color: #888;
   cursor: pointer;
   font-family: var(--font-sans);
@@ -359,14 +359,29 @@ html, body {
 }
 
 .nav-text {
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease, width 0.2s ease;
   opacity: 1;
+}
+
+/* Fix for collapsed sidebar alignment */
+.collapsed .vault-nav-item {
+  padding: 0.6rem 0;
+  justify-content: center;
 }
 
 .collapsed .nav-text,
 .collapsed .cyber-header span {
   opacity: 0;
   pointer-events: none;
+  width: 0;
+  overflow: hidden;
+  margin: 0 !important;
+  flex: none !important;
+  padding: 0 !important;
+}
+
+.collapsed .vault-nav-item svg {
+  margin: 0;
 }
 
 /* Top Navigation Bar in Editor */
