@@ -791,3 +791,56 @@ html, body {
 .notion-editor-wrapper .bn-block-content[data-is-empty-and-focused]::before {
   color: rgba(255, 255, 255, 0.2) !important;
 }
+
+/* =========================================
+   CUSTOM CYBERPUNK SLASH MENU
+   ========================================= */
+.cyber-slash-menu-wrapper {
+  background: rgba(10, 10, 15, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  max-height: 300px;
+  overflow-y: auto;
+  min-width: 220px;
+  z-index: 99999;
+}
+
+.cyber-slash-menu-item {
+  padding: 8px 12px;
+  background: transparent;
+  color: #ccc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 4px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  transition: all 0.1s ease;
+}
+
+.cyber-slash-menu-item:hover, 
+.cyber-slash-menu-item.selected {
+  background: var(--accent);
+  color: #000;
+  font-weight: 500;
+}
+
+/* Elegant scrollbar for the menu */
+.cyber-slash-menu-wrapper::-webkit-scrollbar {
+  width: 4px;
+}
+.cyber-slash-menu-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cyber-slash-menu-wrapper::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}

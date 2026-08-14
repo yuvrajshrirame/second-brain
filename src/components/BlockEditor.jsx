@@ -37,10 +37,41 @@ function isSemanticMatch(plainText, nodeName) {
   return matchPercentage >= 0.75; 
 }
 
+const CustomMenu = (props) => {
+  return (
+    <div className="cyber-slash-menu-wrapper">
+      {props.items.map((item, index) => (
+        <div
+          key={index}
+          className={`cyber-slash-menu-item ${index === props.selectedIndex ? 'selected' : ''}`}
+          onMouseDown={(e) => {
+            // PREVENTS EDITOR BLUR SO THE CLICK ACTUALLY FIRES
+            e.preventDefault(); 
+            props.onItemClick(item);
+          }}
+        >
+          {item.icon && <span style={{ display: 'flex', alignItems: 'center' }}>{item.icon}</span>}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span>{item.title}</span>
+            {item.subtext && <span style={{ fontSize: '0.7rem', opacity: 0.7 }}>{item.subtext}</span>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 // --- 1. THE ACTUAL EDITOR ---
 function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, links, onAddLink, onRemoveLink, user }) {
   const editor = useCreateBlockNote({ initialContent });
   const debounceTimer = useRef(null);
+  const nodesRef = useRef(nodes);
+  const linksRef = useRef(links);
+
+  useEffect(() => {
+    nodesRef.current = nodes;
+    linksRef.current = links;
+  }, [nodes, links]);
   
   // --- AUTO-SYNAPSE STATE ---
   const [suggestedSynapse, setSuggestedSynapse] = useState(null);
@@ -70,13 +101,18 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
         }).join(' ').toLowerCase();
 
         let foundSuggestion = null;
-        for (const node of nodes) {
-          if (node.id === documentId || !node.name || node.name.length < 3) continue;
+        const currentNodes = nodesRef.current;
+        const currentLinks = linksRef.current;
 
-          const alreadyLinked = links.some(l => {
-            const sId = typeof l.source === 'object' ? l.source.id : l.source;
-            const tId = typeof l.target === 'object' ? l.target.id : l.target;
-            return (sId === documentId && tId === node.id) || (sId === node.id && tId === documentId);
+        for (const node of currentNodes) {
+          if (String(node.id) === String(documentId) || !node.name || node.name.length < 3) continue;
+
+          const alreadyLinked = currentLinks.some(l => {
+            const sId = String(typeof l.source === 'object' ? l.source.id : l.source);
+            const tId = String(typeof l.target === 'object' ? l.target.id : l.target);
+            const docIdStr = String(documentId);
+            const nodeIdStr = String(node.id);
+            return (sId === docIdStr && tId === nodeIdStr) || (sId === nodeIdStr && tId === docIdStr);
           });
 
           if (!alreadyLinked && isSemanticMatch(plainText, node.name)) {
@@ -87,18 +123,20 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
         
         setSuggestedSynapse(foundSuggestion);
 
-        const activeLinks = links.filter(l => {
-          const sId = typeof l.source === 'object' ? l.source.id : l.source;
-          const tId = typeof l.target === 'object' ? l.target.id : l.target;
-          return sId === documentId || tId === documentId;
+        const activeLinks = currentLinks.filter(l => {
+          const sId = String(typeof l.source === 'object' ? l.source.id : l.source);
+          const tId = String(typeof l.target === 'object' ? l.target.id : l.target);
+          const docIdStr = String(documentId);
+          return sId === docIdStr || tId === docIdStr;
         });
 
         for (const link of activeLinks) {
-          const sId = typeof link.source === 'object' ? link.source.id : link.source;
-          const tId = typeof link.target === 'object' ? link.target.id : link.target;
-          const otherNodeId = sId === documentId ? tId : sId;
+          const sId = String(typeof link.source === 'object' ? link.source.id : link.source);
+          const tId = String(typeof link.target === 'object' ? link.target.id : link.target);
+          const docIdStr = String(documentId);
+          const otherNodeId = sId === docIdStr ? tId : sId;
           
-          const otherNode = nodes.find(n => n.id === otherNodeId);
+          const otherNode = currentNodes.find(n => String(n.id) === otherNodeId);
 
           if (otherNode) {
             const hasSemanticMatch = isSemanticMatch(plainText, otherNode.name);
@@ -241,16 +279,19 @@ function EditorCore({ documentId, initialContent, onSyncStatusChange, nodes, lin
         editor={editor} 
         theme="dark" 
         onChange={handleEditorChange} 
+        slashMenu={false}
       >
         <SuggestionMenuController
           triggerCharacter={"/"}
           getItems={async (query) =>
             filterSuggestionItems([...getDefaultReactSlashMenuItems(editor), insertAIAssistant(editor)], query)
           }
+          suggestionMenuComponent={CustomMenu}
         />
         <SuggestionMenuController
           triggerCharacter={"@"}
           getItems={getMentionItems}
+          suggestionMenuComponent={CustomMenu}
         />
       </BlockNoteView>
 
